@@ -16,15 +16,17 @@
 	<body>
 		<div id="viewer"></div>
 		<div id="sidebar">
-			<textarea id="ta_input" cols="20" rows="30"></textarea> 
+			<textarea id="ta_input" ></textarea> 
+		</div>
+		<div id="debug">
+			<p id="classname">Classname</p>
+		</div>
+		<div id="sidebar_btn">
 			<button type="button" 	name="update" 			id="btn_update">Update</button>
 			<button type="button" 	name="tween_treemap" 	id="btn_treemap">Treemap</button>
 			<button type="button" 	name="tween_explode" 	id="btn_explode">Explode</button>
 			<button type="button" 	name="tween_next" 		id="btn_next">Next (0)</button>
 			<button type="button" 	name="clear" 		 	id="btn_clear">Clear</button>
-		</div>
-		<div id="debug">
-			<p id="classname">Classname</p>
 		</div>
 		<script src="./js/my/console/log.js" charset="utf-8"></script>
 		<script src="./js/my/treemap/calculate_diagramms.js" charset="utf-8"></script>
