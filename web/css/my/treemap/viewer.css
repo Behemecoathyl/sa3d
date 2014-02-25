@@ -1,0 +1,29 @@
+body {
+	margin: 0;
+	overflow: hidden;
+}
+
+#sidebar {
+	position: absolute;
+	left: -webkit-calc(100% - 298px); /* Safari */
+	left: calc(100% - 298px);
+	width: 298px;
+	height: 90%;
+	background-color: #eee;
+	overflow: auto;
+}
+
+#viewer {
+	position: absolute; 
+	width: -webkit-calc(100% - 300px); /* Safari */
+	width: calc(100% - 300px);
+	height: 90%;
+	border: 1px solid orange;
+}
+
+#debug {
+	position: absolute;
+	bottom: 0px;
+	width: 100%;
+	height: 5%;
+}
