@@ -5,8 +5,7 @@ body {
 
 #viewer {
 	position: absolute; 
-	width: -webkit-calc(100% - 300px); /* Safari */
-	width: 80%;/*calc(100% - 300px);*/
+	width: 80%;
 	height: 80%;
 	border: 1px solid orange;
 }
@@ -20,9 +19,8 @@ body {
 
 #sidebar {
 	position: absolute;
-	/*left: -webkit-calc(100% - 298px);  Safari */
-	left: 81%;/* calc(100% - 298px); */
-	width: 19%; /* 298px; */
+	left: 81%;
+	width: 19%;
 	height: 80%;
 	background-color: #eee;
 	overflow: auto;
@@ -42,5 +40,5 @@ body {
 #ta_input {
 	position: absolute;
 	height: 95%;
-	width: 95%;	/*	cols="10" rows="10"	*/
+	width: 95%;
 }
