@@ -6,7 +6,8 @@ var camera, scene, renderer;
 var light1, light2;
 var controls;
 var viewersize = new THREE.Vector2();
-var mouse = new THREE.Vector2(), INTERSECTED, SELECTED, select_sphere;
+var mouse = new THREE.Vector2();
+var INTERSECTED, SELECTED;
 var axes;
 var diagramm_height = 500;
 var diagramm_width  = 500;
@@ -15,11 +16,8 @@ var status = 0;           // 0 = undefined; 1 = explode; 2 = treemap; 3 = sphere
 var treemap_json;
 var cubes = new Array();  // .length .push() .pop()
 var lines = new Array();  // .length .push() .pop()
-var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [] };
-
-
-//viewersize.x = window.innerWidth * 0.6;//document.getElementById("viewer").width;		
-//viewersize.y = window.innerHeight * 0.6;//document.getElementById("viewer").height;			// TODO  minus Höhe des oberen Teils dynamisch berechnen
+var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation_explode: [] };
+var modified = false;
 
 window.onload=init;
 
@@ -48,7 +46,6 @@ function init_threejs() {
 	controls.dynamicDampingFactor = 0.3;
 
 	controls.keys = [ 65, 83, 68 ];
-//	controls.addEventListener( 'change', render );
 
 	scene 		= new THREE.Scene();
 	projector 	= new THREE.Projector();
@@ -72,34 +69,16 @@ function init_threejs() {
 	} else { 
 		renderer = new THREE.CanvasRenderer();
 	}
-/*
-	if((navigator.userAgent.match(/android/i))) {
-		alert('yay!');
-		renderer = THREE.CanvasRenderer();
-	}
-*/
 	renderer.setClearColorHex( 0xEEEEEE, 1 );
 	renderer.setSize( viewersize.x, 
 					  viewersize.y );
-	init_events();					  
+	init_events();
+	changeStatus();					  
 }
 
 function init_events(){
 	document.getElementById('viewer').appendChild( renderer.domElement );
 	document.getElementById('viewer').addEventListener( 'mousemove', onDocumentMouseMove, false );
-	document.getElementById( 'viewer' ).addEventListener( 'click', function ( event ) {
-/*
-		if (INTERSECTED){
-			if(select_sphere){
-				scene.remove( select_sphere );	
-			}
-			var radius = Math.max(Math.max(INTERSECTED.scale.x, INTERSECTED.scale.y), INTERSECTED.scale.z)*2/3;
-			select_sphere = sphere_mesh( radius );
-			select_sphere.position.set( INTERSECTED.position.x, INTERSECTED.position.y, INTERSECTED.position.z );
-			scene.add( select_sphere );
-		}
-*/		
-	}, false);
 	document.getElementById( 'viewer' ).addEventListener( 'dblclick', tweenNext, false);
 	document.getElementById( 'viewer' ).addEventListener( 'click', click_select, false);
 	
@@ -111,10 +90,10 @@ function init_events(){
 	}, false ); 	
 	document.getElementById( 'btn_treemap' ).addEventListener( 'click', function ( event ) {
 		transform( targets.treemap );
-		status = 2;
+		changeStatus( 2 );// status = 2;
 	}, false );
 	document.getElementById( 'btn_explode' ).addEventListener( 'click', function ( event ) {
-		status = 0;
+		changeStatus( 0 ); //status = 0;
 		tweenNext();
 	}, false );
 	document.getElementById( 'btn_next' ).addEventListener( 'click', tweenNext, false );
@@ -135,20 +114,41 @@ function animate() {
 	TWEEN.update();
 	stats.update();
 	controls.update();
-	hide_lines( scene, lines );  
-	if ( (parseInt( status ) === 3)||(parseInt( status ) === 4)){
-		if(SELECTED &&  SELECTED instanceof THREE.Mesh){
-			lines = calculate_lines( SELECTED, cubes );
-		} else {
-			lines = calculate_lines( cubes[0], cubes );
+
+	// relationship lines:
+//	if (modified) {
+		hide_lines( scene, lines );  
+/*
+		if ( (parseInt( status ) === 1) && true && (cubes.length > 0) ) {  // TODO true erinnert mich nur an eine visuelle Kontrolle über das Anzeigen der Linien
+//			for (var i=0; i < cubes.length; i++) {
+				var tmpLines = new Array();
+				tmpLines = calculate_lines( cubes[0], cubes, cubes[0].userdata.color );
+				for (var i=0; i < tmpLines.length; i++) {
+					lines.push( tmpLines[i] );
+				};
+//			};
+			show_lines( scene, lines ); 
+		} else
+*/ 
+		if ( (parseInt( status ) === 3) || (parseInt( status ) === 4) ){
+			if(SELECTED &&  SELECTED instanceof THREE.Mesh){
+				lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
+			} else {
+				lines = calculate_lines( cubes[0], cubes, cubes[0].userdata.color );
+			}
+			show_lines( scene, lines ); 
 		}
-		show_lines( scene, lines ); 
-	}
+		modified = false; 
+//	}
+
+	// selection and intersection:
 	find_intersections();
 	if(INTERSECTED &&  INTERSECTED instanceof THREE.Mesh){ //INTERSECTED !== axes && INTERSECTED !== select_sphere){
-		var output = INTERSECTED.userdata.name + " (" + INTERSECTED.userdata.size + ") ";
+//		var output = INTERSECTED.userdata.name + " (" + INTERSECTED.userdata.size + ") ";
+		var output = JSON.stringify(INTERSECTED.userdata);
 		document.getElementById("classname").innerHTML = output;  
 	}
+	
 	renderer.render( scene, camera );
 }
 
@@ -163,36 +163,36 @@ function onWindowResize() {
 function tweenNext(){
 	switch (parseInt( status )) {
 	case 0: {
-		status ++;
+		changeStatus(); //status ++;
 		calculate_explode( targets );  
-		transform_cubes_tween( targets.explode, 1000 ); 
+		transform_cubes_tween( targets.explode, 1000 );
 		break;
 	}		
 	case 1: {
-		status ++;  
+		changeStatus(); //status ++;
 		transform_cubes_tween( targets.treemap, 3000 ); 
 		break;
 	}		
 	case 2: {
-		status ++;
+		changeStatus(); //status ++;
 		calculate_sphere( targets );
 		transform_cubes_tween( targets.sphere, 3000 );
 		break;
 	}		
 	case 3: {
-		status ++; 
+		changeStatus(); //status ++;
 		calculate_helix( targets ); 
 		transform_cubes_tween( targets.helix, 3000 ); 
 		break;
 	}
 	case 4: {
-		status ++; 
+		changeStatus(); //status ++;
 		calculate_grid( targets ); 
 		transform_cubes_tween( targets.grid, 3000 ); 
 		break;
 	}
 	case 5: {
-		status = 1; 
+		changeStatus( 1 ); //status = 1;
 		calculate_explode( targets ); 
 		transform_cubes_tween( targets.explode, 1000 ); 
 		break;
@@ -214,18 +214,6 @@ function show_lines( scene, lines ){
 	}
 }
 
-function get_spotlight() {
-	spotLight = new THREE.SpotLight( 0xffffff ); 
-	spotLight.position.set( 1000, 10000, 1000 ); 
-	spotLight.castShadow = true; 
-	spotLight.shadowMapWidth = viewersize.x; 
-	spotLight.shadowMapHeight = viewersize.y; 
-	spotLight.shadowCameraNear = 500; 
-	spotLight.shadowCameraFar = 4000; 
-	spotLight.shadowCameraFov = 30; 
-	return spotLight;
-}
-
 function draw_nodes( nodes ){
 	var i = 0;
 	while (nodes[i]){		
@@ -245,7 +233,7 @@ function draw_node( node ){
 	
 	var pos_x 	= node.x + (box_width/2);
 	var pos_y	= node.y + (box_height/2);
-	var pos_z 	= node.depth * 30 + 25/2;
+	var pos_z 	= node.depth * 60 + 25/2;
 
 	// TREEMAP - POSITION     	-- not realy a draw_node function
 	var obj_treemap = new THREE.Object3D();
@@ -271,22 +259,8 @@ function draw_node( node ){
 	obj_explode.scale.set(scale3, scale3, scale3);
 	targets.explode.push( obj_explode );
 
-	
-	// COLOR STUFF	
-/*
-	if( lastDepth !== node.depth ){
-		cubeColor = get_random_color( node.depth ); 
-	} else if (node.depth >= 1) {
-//		var tinyc = tinycolor.analogous(cubeColor)[1];    // zu schnell in einem anderen Farbbereich
-//		var tinyc = tinycolor.lighten(cubeColor);		  // nach max 3 iterationen weis
-		var tinyc = tinycolor.monochromatic(cubeColor)[1];		
-		cubeColor = tinyc.toHexString(); 
-	}
-	
-*/
-
-	var tinyc;
-	
+	// generate colors
+	var tinyc;	
 	if(node.depth == 0 || node.depth == 1){
 		tinyc = tinycolor.random();
 	}else if(node.depth >= lastDepth){
@@ -307,7 +281,7 @@ function draw_node( node ){
 	cube.scale.set(obj_explode.scale.x, obj_explode.scale.y, obj_explode.scale.z);
 	
 	// CUBE USERDATA
-	var jsonString = "{ \"name\":\"" + node.name + "\", \"size\":\"" + node.size +"\"}";
+	var jsonString = "{ \"name\":\"" + node.name + "\", \"size\":\"" + node.size +"\", \"depth\":\"" + node.depth +"\", \"color\":\"" + cubeColor +"\"}";
 	var out = jQuery.parseJSON( jsonString );
 	cube.userdata = out;
 
@@ -380,7 +354,7 @@ function update_treemap(){
 			draw_nodes(treemap_json);
 		});
 	}
-	status ++;
+	changeStatus; //status ++;
 	calculate_explode( targets );  
 	transform( targets.explode ); 	
 }
@@ -479,4 +453,20 @@ function click_select(){
 	if (INTERSECTED){
 		SELECTED = INTERSECTED;
 	}
+	if ( (parseInt( status ) === 3) || (parseInt( status ) === 4) ) {
+		modified = true;
+	} 
 }
+
+/**
+ * 
+ * @param {Object} newStatus if no newStatus, then inc()
+ */
+function changeStatus( newStatus ){
+	if (newStatus){
+		status = newStatus;
+	}else{
+		status++;		
+	}
+	modified = true;
+} 

@@ -27,24 +27,18 @@ function sphere_mesh( radius ) {
 }
 
 /**
- * Param: spline = THREE.SplineCurve3
+ * creates a line object from a THREE.SplineCurve3
+ * @param {Object} spline THREE.SplineCurve3
  */
-function line_mesh( spline ){
+function line_mesh( spline, color ){
 	var numPoints = 10;
-	
-//	spline = new THREE.SplineCurve3([
-//	   new THREE.Vector3(0, 0, 0),
-//	   new THREE.Vector3(0, 200, 0),
-//	   new THREE.Vector3(150, 150, 0),
-//	   new THREE.Vector3(150, 50, 0),
-//	   new THREE.Vector3(250, 100, 0),
-//	   new THREE.Vector3(250, 300, 0)
-//	]);
-	
-	var material = new THREE.LineBasicMaterial({
-	    color: 0xff0000,
-	});
-	
+	var col;
+	if (color){
+		col = color;
+	}else{
+		col = 0xff0000;
+	}
+	var material = new THREE.LineBasicMaterial( {color: col} );	
 	var geometry = new THREE.Geometry();
 	var splinePoints = spline.getPoints(numPoints);
 	
@@ -53,4 +47,16 @@ function line_mesh( spline ){
 	}
 
 	return new THREE.Line(geometry, material);
+}
+
+function get_spotlight() {
+	spotLight = new THREE.SpotLight( 0xffffff ); 
+	spotLight.position.set( 1000, 10000, 1000 ); 
+	spotLight.castShadow = true; 
+	spotLight.shadowMapWidth = viewersize.x; 
+	spotLight.shadowMapHeight = viewersize.y; 
+	spotLight.shadowCameraNear = 500; 
+	spotLight.shadowCameraFar = 4000; 
+	spotLight.shadowCameraFov = 30; 
+	return spotLight;
 }

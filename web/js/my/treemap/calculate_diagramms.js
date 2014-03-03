@@ -47,7 +47,33 @@ function calculate_explode( targets ){
 	}
 }
 
-function calculate_helix() {
+/**
+ * 
+ * @param {Object} targets	global array of objectpositions
+ * @param {Object} sections	number of random generated sections
+ */
+function calculate_sorted_explode( targets, sections ){
+	var size = 1500;
+	if(targets.explode.length > 0){
+		targets.explode = new Array();
+	}
+	for ( var i = 0; i < cubes.length; i ++ ) {
+		var object = new THREE.Object3D();
+		object.position.x = Math.random() * size - size/2;
+		object.position.y = Math.random() * size - size/2;
+		object.position.z = Math.random() * size - size/2;
+		object.rotation.x = Math.random();
+		object.rotation.y = Math.random();
+		object.rotation.z = Math.random();
+		if(targets.treemap[i]){
+			var scale3 = Math.pow(targets.treemap[i].scale.x*targets.treemap[i].scale.y*targets.treemap[i].scale.z, 1/3);
+			object.scale.set(scale3, scale3, scale3);
+		}
+		targets.explode.push( object );
+	}
+}
+
+function calculate_helix( targets ) {
 	if(targets.helix.length == 0){
 		var vector = new THREE.Vector3();
 		var l = cubes.length;
@@ -71,7 +97,7 @@ function calculate_helix() {
 	}
 }
 
-function calculate_grid () {
+function calculate_grid ( targets ) {
 	if(targets.grid.length == 0){
 		var l = cubes.length;
 		var distance = l/2;
@@ -88,7 +114,7 @@ function calculate_grid () {
 	}
 }	
 
-function calculate_lines( base, cubes ){
+function calculate_curved_lines( base, cubes, color ){
 	var limit = 20;
 	// TODO - beziehungen simulieren
 	// vorerst werden hier nur Linien vom 0. Element zu allen anderen gezogen:
@@ -117,7 +143,26 @@ function calculate_lines( base, cubes ){
 				   cube2.position
 				]);
 			}
-			lines.push( line_mesh( spline ) );
+			lines.push( line_mesh( spline, color ) );
+		}
+	};
+	return lines;
+}
+
+function calculate_lines( base, cubes, color ){
+	// TODO - beziehungen simulieren
+	// vorerst werden hier nur Linien vom 0. Element zu allen anderen gezogen:
+	var lines = new Array();
+	for (var i=0; i < cubes.length; i++) {
+		if (i % 5 == 0){
+			var cube1, cube2;
+			cube1	= base;
+			cube2	= cubes[i];						
+			var spline 	= new THREE.SplineCurve3([
+			   cube1.position,
+			   cube2.position
+			]);
+			lines.push( line_mesh( spline, color ) );
 		}
 	};
 	return lines;
