@@ -39,6 +39,13 @@ body {
 
 #ta_input {
 	position: absolute;
-	height: 95%;
+	height: 50%;
 	width: 95%;
+}
+
+#diagramm_radio {
+	position: absolute;
+	height: 45%;
+	width: 95%;
+	top: 55%;
 }

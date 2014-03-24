@@ -16,7 +16,15 @@
 	<body>
 		<div id="viewer"></div>
 		<div id="sidebar">
-			<textarea id="ta_input" ></textarea> 
+			<textarea id="ta_input"></textarea> 
+			<div id="diagramm_radio"> 
+				<input type="radio" name="Diagramm" value="1" id="intro" checked="checked" onchange="tweenToStatus(1)"> Intro<br> 
+				<input type="radio" name="Diagramm" value="2" id="treemap_package" onchange="tweenToStatus(2)"> Treemap - Packages<br> 
+				<input type="radio" name="Diagramm" value="3" id="treemap_classes" onchange="tweenToStatus(3)"> Treemap - Classes<br> 
+				<input type="radio" name="Diagramm" value="4" id="relation_sphere" onchange="tweenToStatus(4)"> Relation-Sphere<br> 
+				<input type="radio" name="Diagramm" value="5" id="relation_helix" onchange="tweenToStatus(5)"> Relation-Helix<br>
+				<input type="radio" name="Diagramm" value="6" id="relation_package_plain" onchange="tweenToStatus(6)"> Relation-Package/Plain
+			</div>
 		</div>
 		<div id="debug">
 			<p id="classname">Classname</p>
@@ -25,12 +33,12 @@
 			<button type="button" 	name="update" 			id="btn_update">Update</button>
 			<button type="button" 	name="tween_treemap" 	id="btn_treemap">Treemap</button>
 			<button type="button" 	name="tween_explode" 	id="btn_explode">Explode</button>
-			<button type="button" 	name="tween_next" 		id="btn_next">Next (0)</button>
+			<button type="button" 	name="tween_next" 		id="btn_next">Next</button>
 			<button type="button" 	name="clear" 		 	id="btn_clear">Clear</button>
 		</div>
 		<script src="./js/my/console/log.js" charset="utf-8"></script>
-		<script src="./js/my/treemap/calculate_diagramms.js" charset="utf-8"></script>
-		<script src="./js/my/treemap/elements.js" charset="utf-8"></script>
-		<script src="./js/my/treemap/animation.js" charset="utf-8"></script>
+		<script src="./js/my/diagram/calculate_diagramms.js" charset="utf-8"></script>
+		<script src="./js/my/diagram/elements.js" charset="utf-8"></script>
+		<script src="./js/my/diagram/animation.js" charset="utf-8"></script>
 	</body>
 </html>

@@ -11,13 +11,21 @@ var INTERSECTED, SELECTED;
 var axes;
 var diagramm_height = 500;
 var diagramm_width  = 500;
-var status = 0;           // 0 = undefined; 1 = explode; 2 = treemap; 3 = sphere; 4 = helix; 
 
 var treemap_json;
 var cubes = new Array();  // .length .push() .pop()
 var lines = new Array();  // .length .push() .pop()
 var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation_explode: [] };
 var modified = false;
+
+var status = 0;            // 0-6            
+var diagram_radio_array = { idxToValue:	[	"undefinded", 
+											"intro",	
+											"treemap_package", 
+											"treemap_classes", 
+											"relation_sphere", 
+											"relation_helix", 
+											"relation_package_plain"]};
 
 window.onload=init;
 
@@ -77,9 +85,9 @@ function init_threejs() {
 }
 
 function init_events(){
-	document.getElementById('viewer').appendChild( renderer.domElement );
-	document.getElementById('viewer').addEventListener( 'mousemove', onDocumentMouseMove, false );
-	document.getElementById( 'viewer' ).addEventListener( 'dblclick', tweenNext, false);
+	document.getElementById( 'viewer' ).appendChild( renderer.domElement );
+	document.getElementById( 'viewer' ).addEventListener( 'mousemove', onDocumentMouseMove, false );
+	document.getElementById( 'viewer' ).addEventListener( 'dblclick', tweenToStatus, false);
 	document.getElementById( 'viewer' ).addEventListener( 'click', click_select, false);
 	
 	window.addEventListener( 'resize', onWindowResize, false );
@@ -88,15 +96,13 @@ function init_events(){
 	document.getElementById( 'btn_update' ).addEventListener( 'click', function ( event ) {
 		update_treemap();
 	}, false ); 	
-	document.getElementById( 'btn_treemap' ).addEventListener( 'click', function ( event ) {
-		transform( targets.treemap );
-		changeStatus( 2 );// status = 2;
-	}, false );
 	document.getElementById( 'btn_explode' ).addEventListener( 'click', function ( event ) {
-		changeStatus( 0 ); //status = 0;
-		tweenNext();
+		tweenToStatus(1);
 	}, false );
-	document.getElementById( 'btn_next' ).addEventListener( 'click', tweenNext, false );
+	document.getElementById( 'btn_treemap' ).addEventListener( 'click', function ( event ) {
+		tweenToStatus(2);
+	}, false );
+	document.getElementById( 'btn_next' ).addEventListener( 'click', tweenToStatus, false );
 	document.getElementById( 'btn_clear' ).addEventListener( 'click', function ( event ) {
 		clear_scene();
 	}, false ); 	
@@ -130,7 +136,7 @@ function animate() {
 			show_lines( scene, lines ); 
 		} else
 */ 
-		if ( (parseInt( status ) === 3) || (parseInt( status ) === 4) ){
+		if ( (parseInt( status ) === 4) || (parseInt( status ) === 5) || (parseInt( status ) === 6)){
 			if(SELECTED &&  SELECTED instanceof THREE.Mesh){
 				lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
 			} else {
@@ -160,46 +166,67 @@ function onWindowResize() {
 	renderer.setSize( viewersize.x, viewersize.y );
 }
 
-function tweenNext(){
+/**
+ * 
+ * @param {Object} newStatus if no newStatus, then inc()
+ */
+function changeStatus( newStatus ){
+	if ((newStatus)&&( newStatus <= 6)){
+		status = newStatus;
+	}else{
+		status++;		
+	}
+	modified = true;
+} 
+
+function tweenToStatus( next ){
+	changeStatus( next );
+	
 	switch (parseInt( status )) {
-	case 0: {
-		changeStatus(); //status ++;
-		calculate_explode( targets );  
-		transform_cubes_tween( targets.explode, 1000 );
-		break;
-	}		
-	case 1: {
-		changeStatus(); //status ++;
-		transform_cubes_tween( targets.treemap, 3000 ); 
-		break;
-	}		
-	case 2: {
-		changeStatus(); //status ++;
-		calculate_sphere( targets );
-		transform_cubes_tween( targets.sphere, 3000 );
-		break;
-	}		
-	case 3: {
-		changeStatus(); //status ++;
-		calculate_helix( targets ); 
-		transform_cubes_tween( targets.helix, 3000 ); 
-		break;
+		case 0: {
+			break;
+		}
+		case 1: {
+			calculate_explode( targets );  
+			transform_cubes_tween( targets.explode, 1000 );
+			break;
+		}		
+		case 2: {
+			transform_cubes_tween( targets.treemap, 3000 ); 
+			break;
+		}		
+		// TODO: treemap für Packages hier einfügen
+		case 3: {
+			transform_cubes_tween( targets.treemap, 3000 ); 
+			break;
+		}		
+		case 4: {
+			calculate_sphere( targets );
+			transform_cubes_tween( targets.sphere, 3000 );
+			break;
+		}		
+		case 5: {
+			calculate_helix( targets ); 
+			transform_cubes_tween( targets.helix, 3000 ); 
+			break;
+		}
+		case 6: {
+			calculate_grid( targets ); 
+			transform_cubes_tween( targets.grid, 3000 ); 
+			break;
+		}
+		default: { 
+			changeStatus( 1 ); 
+			calculate_explode( targets ); 
+			transform_cubes_tween( targets.explode, 1000 ); 
+			break;
+		}		
 	}
-	case 4: {
-		changeStatus(); //status ++;
-		calculate_grid( targets ); 
-		transform_cubes_tween( targets.grid, 3000 ); 
-		break;
-	}
-	case 5: {
-		changeStatus( 1 ); //status = 1;
-		calculate_explode( targets ); 
-		transform_cubes_tween( targets.explode, 1000 ); 
-		break;
-	}
-	default: { break; }		
-	}
-	document.getElementById( 'btn_next' ).innerHTML = 'Next (' + (status) + ')';
+	
+	var radio_btn = document.getElementById( diagram_radio_array.idxToValue[status] );
+	if (radio_btn){
+		radio_btn.checked="checked";
+	}	
 }
 
 function hide_lines( scene, lines ){
@@ -458,15 +485,3 @@ function click_select(){
 	} 
 }
 
-/**
- * 
- * @param {Object} newStatus if no newStatus, then inc()
- */
-function changeStatus( newStatus ){
-	if (newStatus){
-		status = newStatus;
-	}else{
-		status++;		
-	}
-	modified = true;
-} 
