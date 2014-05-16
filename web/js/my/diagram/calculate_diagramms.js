@@ -114,6 +114,59 @@ function calculate_grid ( targets ) {
 	}
 }	
 
+function calculate_relation( targets ){
+	var distance = 100 + 1 * cubes.length; //1000;						// "Radius"-Distanz zur Mitte = default 100 + Anzahl der Klassen
+	
+	var package_count = 15;						// angenommene Package Anzahl - später hoffentlich bekannt
+	var angle_d = (Math.PI*2) / package_count;   	// Winkelschritt in Bogenmaß
+
+	// Sektionsaufteilung anhand der Anzahl der Packages
+	var axis = new THREE.Vector3( 0, 1, 0 );
+	var sections = new Array();
+	var v = new THREE.Vector3(distance, 0, 0);
+	var angle = 0;
+	for (var i=0; i < package_count; i++) {
+		sections.push( rotate_vector( v, axis, angle ) );			  
+		angle += angle_d;
+	};
+	
+	
+	// Zufallswerte ermitteln und in die jeweilige Package Section räumen:
+	var size;
+	if(sections.length>=2){
+		size = sections[0].distanceTo(sections[1]) * 0.5;		// abstand zweier benachbarter Sektionen
+	} else {
+		size = 200;
+	} 	
+	if(targets.relation.length > 0){
+		targets.relation = new Array();
+	}
+	for ( var i = 0; i < cubes.length; i ++ ) {
+		var object = new THREE.Object3D();
+		object.position.x = Math.random() * size - size/2 + sections[i%package_count].x;		// TODO % entfernen und durch logik ersetzen
+		object.position.y = Math.random() * size - size/2 + sections[i%package_count].y;
+		object.position.z = Math.random() * size - size/2 + sections[i%package_count].z;
+		if(targets.treemap[i]){
+			var scale3 = 0.02 * distance; 																	// gleiche größe für alle Klassen 
+			object.scale.set(scale3, scale3, scale3);
+		}
+		targets.relation.push( object );
+	}			
+}
+
+function rotate_vector( v, axis, angle ){
+	if (v) {
+		var v_return = v.clone();
+		var matrix = new THREE.Matrix4().makeRotationAxis( axis, angle );
+	
+		v_return.applyMatrix4( matrix );
+		return v_return;
+	}else{
+		return new THREE.Vector3( 0, 0, 0 );
+	}
+}
+
+
 function calculate_curved_lines( base, cubes, color ){
 	var limit = 20;
 	// TODO - beziehungen simulieren
@@ -153,8 +206,9 @@ function calculate_lines( base, cubes, color ){
 	// TODO - beziehungen simulieren
 	// vorerst werden hier nur Linien vom 0. Element zu allen anderen gezogen:
 	var lines = new Array();
+	var rnd = parseInt(Math.random()*50);
 	for (var i=0; i < cubes.length; i++) {
-		if (i % 5 == 0){
+		if (i % rnd == 1){
 			var cube1, cube2;
 			cube1	= base;
 			cube2	= cubes[i];						

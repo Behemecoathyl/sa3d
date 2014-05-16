@@ -15,8 +15,9 @@ var diagramm_width  = 500;
 var treemap_json;
 var cubes = new Array();  // .length .push() .pop()
 var lines = new Array();  // .length .push() .pop()
-var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation_explode: [] };
+var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation: [] };
 var modified = false;
+var tweening = false;
 
 var status = 0;            // 0-6            
 var diagram_radio_array = { idxToValue:	[	"undefinded", 
@@ -87,7 +88,7 @@ function init_threejs() {
 function init_events(){
 	document.getElementById( 'viewer' ).appendChild( renderer.domElement );
 	document.getElementById( 'viewer' ).addEventListener( 'mousemove', onDocumentMouseMove, false );
-	document.getElementById( 'viewer' ).addEventListener( 'dblclick', tweenToStatus, false);
+//	document.getElementById( 'viewer' ).addEventListener( 'dblclick', tweenToStatus, false);
 	document.getElementById( 'viewer' ).addEventListener( 'click', click_select, false);
 	
 	window.addEventListener( 'resize', onWindowResize, false );
@@ -96,16 +97,15 @@ function init_events(){
 	document.getElementById( 'btn_update' ).addEventListener( 'click', function ( event ) {
 		update_treemap();
 	}, false ); 	
-	document.getElementById( 'btn_explode' ).addEventListener( 'click', function ( event ) {
-		tweenToStatus(1);
-	}, false );
-	document.getElementById( 'btn_treemap' ).addEventListener( 'click', function ( event ) {
-		tweenToStatus(2);
-	}, false );
-	document.getElementById( 'btn_next' ).addEventListener( 'click', tweenToStatus, false );
 	document.getElementById( 'btn_clear' ).addEventListener( 'click', function ( event ) {
 		clear_scene();
 	}, false ); 	
+	document.getElementById( 'btn_reset_view' ).addEventListener( 'click', function( event ){
+		//TODO camera richtig reseten: camera.setViewOffset(viewersize.x, viewersize.y,);//( fullWidth, fullHeight, x, y, width, height )		
+		//75, viewersize.x / viewersize.y, 1, 3000
+		camera.position.set( 400, 400, 400 );
+		camera.lookAt(0,0,0);		
+	}, false );
 	
 	// FRAME STATUS
 	stats = new Stats();
@@ -122,30 +122,33 @@ function animate() {
 	controls.update();
 
 	// relationship lines:
-//	if (modified) {
+	if (modified) {
 		hide_lines( scene, lines );  
-/*
-		if ( (parseInt( status ) === 1) && true && (cubes.length > 0) ) {  // TODO true erinnert mich nur an eine visuelle Kontrolle über das Anzeigen der Linien
-//			for (var i=0; i < cubes.length; i++) {
-				var tmpLines = new Array();
-				tmpLines = calculate_lines( cubes[0], cubes, cubes[0].userdata.color );
-				for (var i=0; i < tmpLines.length; i++) {
-					lines.push( tmpLines[i] );
+		// PERFORMANCE BEACHTEN - nur zeichen, wenn modified und nicht im Tween (tweening)!!
+		if (!tweening){
+			if ( (parseInt( status ) === 4) || (parseInt( status ) === 5) ){
+				if(SELECTED &&  SELECTED instanceof THREE.Mesh){
+					lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
+					//lines = calculate_lines( SELECTED, cubes, SELECTED.userdata.color );
+				} else {
+				//	lines = calculate_lines( cubes[0], cubes, cubes[0].userdata.color );
+				}
+				show_lines( scene, lines ); 
+			}else if ((parseInt( status ) === 6)){
+				for (var i=0; i < cubes.length; i++) {
+					//if(i%17===1){
+						var tmpLines = new Array();
+						tmpLines = calculate_lines( cubes[i], cubes, cubes[i].userdata.color );
+						for (var j=0; j < tmpLines.length; j++) {
+							lines.push( tmpLines[j] );
+						};
+					//}
 				};
-//			};
-			show_lines( scene, lines ); 
-		} else
-*/ 
-		if ( (parseInt( status ) === 4) || (parseInt( status ) === 5) || (parseInt( status ) === 6)){
-			if(SELECTED &&  SELECTED instanceof THREE.Mesh){
-				lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
-			} else {
-				lines = calculate_lines( cubes[0], cubes, cubes[0].userdata.color );
+				show_lines( scene, lines ); 
 			}
-			show_lines( scene, lines ); 
+			modified = false; 
 		}
-		modified = false; 
-//	}
+	}
 
 	// selection and intersection:
 	find_intersections();
@@ -211,8 +214,10 @@ function tweenToStatus( next ){
 			break;
 		}
 		case 6: {
-			calculate_grid( targets ); 
-			transform_cubes_tween( targets.grid, 3000 ); 
+//			calculate_grid( targets ); 
+//			transform_cubes_tween( targets.grid, 3000 );
+			calculate_relation( targets );
+			transform_cubes_tween( targets.relation, 3000 ); 
 			break;
 		}
 		default: { 
@@ -233,6 +238,7 @@ function hide_lines( scene, lines ){
 	for(var i = 0; i < lines.length; i++){
 		scene.remove( lines[i] );
 	}
+	lines = new Array();
 }
 
 function show_lines( scene, lines ){
@@ -392,6 +398,7 @@ function clear_scene(){
 	targets.sphere	= new Array();
 	targets.helix   = new Array();
 	targets.grid	= new Array();
+	targets.relation= new Array();
 	while(cubes.length>0){
 		scene.remove( cubes.pop() );
 	}
@@ -469,18 +476,25 @@ function transform_cubes_tween( targets, duration ) {
 	new TWEEN.Tween( this )
 		.to( {}, duration * 2 )
 		.onUpdate( render )
+		.onComplete( tweenStop )
 		.start();
+	
+	tweening = true;
 }
 
 function render(){
 	renderer.render( scene, camera );
 }
 
+function tweenStop(){
+	tweening = false;	
+}
+
 function click_select(){
 	if (INTERSECTED){
 		SELECTED = INTERSECTED;
 	}
-	if ( (parseInt( status ) === 3) || (parseInt( status ) === 4) ) {
+	if ( (parseInt( status ) === 4) || (parseInt( status ) === 5) /*|| (parseInt( status ) === 6)*/ ) {
 		modified = true;
 	} 
 }
