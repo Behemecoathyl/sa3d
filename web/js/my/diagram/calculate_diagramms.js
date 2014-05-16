@@ -2,13 +2,15 @@
  * @author Behemecoathyl
  */
 
+/**
+ * Erzeugt die Target-Elemente für das Sphere Diagramm
+ */
 function calculate_sphere( targets ){
 	if(targets.sphere.length == 0){
 		var vector = new THREE.Vector3();
 		var l = cubes.length;
 		var radius = l * 1.5;
 		for ( var i = 0; i < l; i ++ ) {
-		
 			var phi = Math.acos( -1 + ( 2 * i ) / l );
 			var theta = Math.sqrt( l * Math.PI ) * phi;
 		
@@ -26,6 +28,20 @@ function calculate_sphere( targets ){
 	}
 }
 
+/**
+ * lokale Skalierung der Objekte für die Sphere
+ */
+function local_scale( object ){
+	if(object){
+		object.scale.x = 40;
+		object.scale.y = 40;
+		object.scale.z = 5;    
+	}
+}
+
+/**
+ * Erzeugt die Target-Elemente für das Intro Diagramm
+ */
 function calculate_explode( targets ){
 	var size = 1500;
 	if(targets.explode.length > 0){
@@ -52,6 +68,7 @@ function calculate_explode( targets ){
  * @param {Object} targets	global array of objectpositions
  * @param {Object} sections	number of random generated sections
  */
+/*
 function calculate_sorted_explode( targets, sections ){
 	var size = 1500;
 	if(targets.explode.length > 0){
@@ -72,7 +89,11 @@ function calculate_sorted_explode( targets, sections ){
 		targets.explode.push( object );
 	}
 }
+*/
 
+/**
+ * Erzeugt die Target-Elemente für das Helix Diagramm
+ */
 function calculate_helix( targets ) {
 	if(targets.helix.length == 0){
 		var vector = new THREE.Vector3();
@@ -97,6 +118,10 @@ function calculate_helix( targets ) {
 	}
 }
 
+/**
+ * Erzeugt die Target-Elemente für das Sphere Diagramm
+ * @DEPRECIATED
+ */
 function calculate_grid ( targets ) {
 	if(targets.grid.length == 0){
 		var l = cubes.length;
@@ -114,22 +139,19 @@ function calculate_grid ( targets ) {
 	}
 }	
 
-function calculate_relation( targets ){
+/**
+ * Berechnet Sektionen auf einer Kreisbahn 
+ * @param {Number} type 1 - Relation auf Kreisbasis, 2 - Relation auf Kugelhülle
+ */
+function calculate_relation( targets, type ){
 	var distance = 100 + 1 * cubes.length; //1000;						// "Radius"-Distanz zur Mitte = default 100 + Anzahl der Klassen
-	
 	var package_count = 15;						// angenommene Package Anzahl - später hoffentlich bekannt
-	var angle_d = (Math.PI*2) / package_count;   	// Winkelschritt in Bogenmaß
-
-	// Sektionsaufteilung anhand der Anzahl der Packages
-	var axis = new THREE.Vector3( 0, 1, 0 );
-	var sections = new Array();
-	var v = new THREE.Vector3(distance, 0, 0);
-	var angle = 0;
-	for (var i=0; i < package_count; i++) {
-		sections.push( rotate_vector( v, axis, angle ) );			  
-		angle += angle_d;
-	};
 	
+	if(parseInt(type)==1){
+		sections = calculate_sections_arc( distance, package_count );
+	} else if (parseInt(type)==2){
+		sections = calculate_sections_sphere( distance, package_count );	
+	}
 	
 	// Zufallswerte ermitteln und in die jeweilige Package Section räumen:
 	var size;
@@ -150,10 +172,40 @@ function calculate_relation( targets ){
 			var scale3 = 0.02 * distance; 																	// gleiche größe für alle Klassen 
 			object.scale.set(scale3, scale3, scale3);
 		}
-		targets.relation.push( object );
+
+		if(parseInt(type)==1){
+			targets.relation.push( object );
+		} else if (parseInt(type)==2){
+			targets.relationSphere.push( object );
+		}
 	}			
 }
 
+/**
+ * Berechnet Sektionen auf einer Kreisbahn 
+ * @param {Number} distance Radius der Kreisbahn
+ * @param {Number} count Anzahl der Sektionen
+ */
+function calculate_sections_arc( distance, count ){
+	var angle_d = (Math.PI*2) / count;   	// Winkelschritt in Bogenmaß
+	// Sektionsaufteilung anhand der Anzahl der Packages
+	var axis = new THREE.Vector3( 0, 1, 0 );
+	var sections = new Array();
+	var v = new THREE.Vector3(distance, 0, 0);
+	var angle = 0;
+	for (var i=0; i < count; i++) {
+		sections.push( rotate_vector( v, axis, angle ) );			  
+		angle += angle_d;
+	};
+	return sections;
+}
+
+/**
+ * Dreht einen Vektor (v) um die Axe (axis) im Winkel (angle) der im Bogenmaß angegeben ist 
+ * @param {THREE.Vector3} v
+ * @param {THREE.Vector3} axis
+ * @param {Number} angle
+ */
 function rotate_vector( v, axis, angle ){
 	if (v) {
 		var v_return = v.clone();
@@ -166,7 +218,35 @@ function rotate_vector( v, axis, angle ){
 	}
 }
 
+/**
+ * Berechnet Sektionen in Kugelform (auf der Aussenhülle)	 
+ * @param {Number} distance
+ * @param {Number} count
+ */
+function calculate_sections_sphere( distance, count ){
+	var sections = new Array();
+	var vector = new THREE.Vector3();
+	var l = count;
+	var radius = distance;
+	for ( var i = 0; i < l; i ++ ) {
+	
+		var phi = Math.acos( -1 + ( 2 * i ) / l );
+		var theta = Math.sqrt( l * Math.PI ) * phi;
+	
+		var x = radius * Math.cos( theta ) * Math.sin( phi );
+		var y = radius * Math.sin( theta ) * Math.sin( phi );
+		var z = radius * Math.cos( phi );
+		sections.push(new THREE.Vector3(x, y, z));	
+	}
+	return sections;
+}
 
+/**
+ * Berechnet gebogene Beziehungslinien
+ * @param {Object} base Basispunkt
+ * @param {Object} cubes Liste aller Beziehungsknoten
+ * @param {Object} color Farbe
+ */
 function calculate_curved_lines( base, cubes, color ){
 	var limit = 20;
 	// TODO - beziehungen simulieren
@@ -202,6 +282,12 @@ function calculate_curved_lines( base, cubes, color ){
 	return lines;
 }
 
+/**
+ * Berechnet gerade Beziehungslinien
+ * @param {Object} base Basispunkt
+ * @param {Object} cubes Liste aller Beziehungsknoten
+ * @param {Object} color Farbe
+ */
 function calculate_lines( base, cubes, color ){
 	// TODO - beziehungen simulieren
 	// vorerst werden hier nur Linien vom 0. Element zu allen anderen gezogen:
@@ -222,6 +308,11 @@ function calculate_lines( base, cubes, color ){
 	return lines;
 }
 
+/**
+ * 
+ * @param {Object} position1
+ * @param {Object} position2
+ */
 function spline_vector_line( position1, position2 ){
 	var radius 	= position1.length();		
 	var pos1	= position1.clone();
@@ -239,10 +330,3 @@ function spline_vector_line( position1, position2 ){
 //	return middle;
 }
 
-function local_scale( object ){
-	if(object){
-		object.scale.x = 40;
-		object.scale.y = 40;
-		object.scale.z = 5;    
-	}
-}

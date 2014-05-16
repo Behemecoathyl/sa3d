@@ -15,18 +15,19 @@ var diagramm_width  = 500;
 var treemap_json;
 var cubes = new Array();  // .length .push() .pop()
 var lines = new Array();  // .length .push() .pop()
-var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation: [] };
+var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation: [], relationSphere: [] };
 var modified = false;
 var tweening = false;
 
-var status = 0;            // 0-6            
+var status = 0;            // 0-7            
 var diagram_radio_array = { idxToValue:	[	"undefinded", 
 											"intro",	
 											"treemap_package", 
 											"treemap_classes", 
 											"relation_sphere", 
 											"relation_helix", 
-											"relation_package_plain"]};
+											"relation_package_arc",
+											"relation_package_sphere"]};
 
 window.onload=init;
 
@@ -126,23 +127,24 @@ function animate() {
 		hide_lines( scene, lines );  
 		// PERFORMANCE BEACHTEN - nur zeichen, wenn modified und nicht im Tween (tweening)!!
 		if (!tweening){
+			
+			// Relationen von einem Objekt zu vielen
 			if ( (parseInt( status ) === 4) || (parseInt( status ) === 5) ){
 				if(SELECTED &&  SELECTED instanceof THREE.Mesh){
 					lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
 					//lines = calculate_lines( SELECTED, cubes, SELECTED.userdata.color );
-				} else {
-				//	lines = calculate_lines( cubes[0], cubes, cubes[0].userdata.color );
-				}
-				show_lines( scene, lines ); 
-			}else if ((parseInt( status ) === 6)){
+					show_lines( scene, lines ); 
+				} 
+			}
+			// Relationen von vielen zu vielen (AAAAAH... die Performance)
+			else if ((parseInt( status ) === 6) || (parseInt( status ) === 7)){
+				lines = new Array();
 				for (var i=0; i < cubes.length; i++) {
-					//if(i%17===1){
-						var tmpLines = new Array();
-						tmpLines = calculate_lines( cubes[i], cubes, cubes[i].userdata.color );
-						for (var j=0; j < tmpLines.length; j++) {
-							lines.push( tmpLines[j] );
-						};
-					//}
+					var tmpLines = new Array();
+					tmpLines = calculate_lines( cubes[i], cubes, cubes[i].userdata.color );
+					for (var j=0; j < tmpLines.length; j++) {
+						lines.push( tmpLines[j] );
+					};
 				};
 				show_lines( scene, lines ); 
 			}
@@ -152,8 +154,8 @@ function animate() {
 
 	// selection and intersection:
 	find_intersections();
-	if(INTERSECTED &&  INTERSECTED instanceof THREE.Mesh){ //INTERSECTED !== axes && INTERSECTED !== select_sphere){
-//		var output = INTERSECTED.userdata.name + " (" + INTERSECTED.userdata.size + ") ";
+	if(INTERSECTED &&  INTERSECTED instanceof THREE.Mesh){ /*INTERSECTED !== axes && INTERSECTED !== select_sphere){
+		var output = INTERSECTED.userdata.name + " (" + INTERSECTED.userdata.size + ") ";*/
 		var output = JSON.stringify(INTERSECTED.userdata);
 		document.getElementById("classname").innerHTML = output;  
 	}
@@ -174,7 +176,7 @@ function onWindowResize() {
  * @param {Object} newStatus if no newStatus, then inc()
  */
 function changeStatus( newStatus ){
-	if ((newStatus)&&( newStatus <= 6)){
+	if ((newStatus)&&( newStatus <= 7)){
 		status = newStatus;
 	}else{
 		status++;		
@@ -216,8 +218,13 @@ function tweenToStatus( next ){
 		case 6: {
 //			calculate_grid( targets ); 
 //			transform_cubes_tween( targets.grid, 3000 );
-			calculate_relation( targets );
+			calculate_relation( targets, 1 );
 			transform_cubes_tween( targets.relation, 3000 ); 
+			break;
+		}
+		case 7: {
+			calculate_relation( targets, 2 );
+			transform_cubes_tween( targets.relationSphere, 3000 ); 
 			break;
 		}
 		default: { 
@@ -403,6 +410,7 @@ function clear_scene(){
 		scene.remove( cubes.pop() );
 	}
 	status = 0;
+	hide_lines( scene, lines );
 }
 			
 
