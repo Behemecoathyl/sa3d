@@ -21,6 +21,7 @@ var modified = false;
 var tweening = false;
 
 var relation_mode = 0;		// 0 - Single Relation, 1 - All Relation
+var intro_mode = 0;			// 0 - Lines of Code, 1 - Anzahl Public Functionen, 2 - usw...
 var status = 0;            // 0-7            
 var diagram_radio_array = { idxToValue:	[	"undefinded", 
 											"intro",	
@@ -116,6 +117,9 @@ function init_events(){
 	stats.domElement.style.bottom = '0px';
 	stats.domElement.style.zIndex = 100;
 	document.getElementById( 'viewer' ).appendChild( stats.domElement );
+	
+	hide_diagramm_controls();
+	show_intro_control_div();
 }
 
 function animate() {
@@ -160,7 +164,7 @@ function changeStatus( newStatus ){
 
 function tweenToStatus( next ){
 	changeStatus( next );
-	
+	hide_diagramm_controls();
 	switch (parseInt( status )) {
 		case 0: {
 			break;
@@ -180,21 +184,25 @@ function tweenToStatus( next ){
 			break;
 		}		
 		case 4: {
+			show_relation_control_div();
 			calculate_sphere( targets );
 			transform_cubes_tween( targets.sphere, 3000 );
 			break;
 		}		
 		case 5: {
+			show_relation_control_div();
 			calculate_helix( targets ); 
 			transform_cubes_tween( targets.helix, 3000 ); 
 			break;
 		}
 		case 6: {
+			show_relation_control_div();
 			calculate_relation( targets, 1 );
 			transform_cubes_tween( targets.relation, 3000 ); 
 			break;
 		}
 		case 7: {
+			show_relation_control_div();
 			calculate_relation( targets, 2 );
 			transform_cubes_tween( targets.relationSphere, 3000 ); 
 			break;
@@ -550,3 +558,25 @@ function setRelationMode(mode){
 	modified = true;
 }
 
+function setIntroMode(mode){
+	intro_mode = mode;
+	// TODO tween...
+	// neu berechnen
+}
+
+function hide_diagramm_controls(){
+	var div = document.getElementById("diagram_relation");
+	div.style.display='none';	
+	var div = document.getElementById("diagram_intro");
+	div.style.display='none';	
+}
+
+function show_relation_control_div(){
+	var div = document.getElementById("diagram_relation");
+	div.style.display='block';	
+}
+
+function show_intro_control_div(){
+	var div = document.getElementById("diagram_intro");
+	div.style.display='block';	
+}
