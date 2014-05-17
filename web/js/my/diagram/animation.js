@@ -15,10 +15,12 @@ var diagramm_width  = 500;
 var treemap_json;
 var cubes = new Array();  // .length .push() .pop()
 var lines = new Array();  // .length .push() .pop()
+var tempObj = new Array();
 var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation: [], relationSphere: [] };
 var modified = false;
 var tweening = false;
 
+var relation_mode = 0;		// 0 - Single Relation, 1 - All Relation
 var status = 0;            // 0-7            
 var diagram_radio_array = { idxToValue:	[	"undefinded", 
 											"intro",	
@@ -122,35 +124,7 @@ function animate() {
 	stats.update();
 	controls.update();
 
-	// relationship lines:
-	if (modified) {
-		hide_lines( scene, lines );  
-		// PERFORMANCE BEACHTEN - nur zeichen, wenn modified und nicht im Tween (tweening)!!
-		if (!tweening){
-			
-			// Relationen von einem Objekt zu vielen
-			if ( (parseInt( status ) === 4) || (parseInt( status ) === 5) ){
-				if(SELECTED &&  SELECTED instanceof THREE.Mesh){
-					lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
-					//lines = calculate_lines( SELECTED, cubes, SELECTED.userdata.color );
-					show_lines( scene, lines ); 
-				} 
-			}
-			// Relationen von vielen zu vielen (AAAAAH... die Performance)
-			else if ((parseInt( status ) === 6) || (parseInt( status ) === 7)){
-				lines = new Array();
-				for (var i=0; i < cubes.length; i++) {
-					var tmpLines = new Array();
-					tmpLines = calculate_lines( cubes[i], cubes, cubes[i].userdata.color );
-					for (var j=0; j < tmpLines.length; j++) {
-						lines.push( tmpLines[j] );
-					};
-				};
-				show_lines( scene, lines ); 
-			}
-			modified = false; 
-		}
-	}
+	updateLines();
 
 	// selection and intersection:
 	find_intersections();
@@ -216,8 +190,6 @@ function tweenToStatus( next ){
 			break;
 		}
 		case 6: {
-//			calculate_grid( targets ); 
-//			transform_cubes_tween( targets.grid, 3000 );
 			calculate_relation( targets, 1 );
 			transform_cubes_tween( targets.relation, 3000 ); 
 			break;
@@ -241,6 +213,55 @@ function tweenToStatus( next ){
 	}	
 }
 
+function updateLines(){
+	// relationship lines:
+	if (modified) {
+		hide_lines( scene, lines );  
+		// PERFORMANCE BEACHTEN - nur zeichen, wenn modified und nicht im Tween (tweening)!!
+		if (!tweening){
+			if ( (parseInt( status ) === 4) || 
+				 (parseInt( status ) === 5) ||
+				 (parseInt( status ) === 6) || 
+				 (parseInt( status ) === 7)){
+			
+				// Relationen von einem Objekt zu vielen
+				if ( (parseInt( relation_mode ) === 0) ){
+					if(SELECTED &&  SELECTED instanceof THREE.Mesh){
+						switch (parseInt(status)){
+							case 4: {
+								lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
+								break;
+							}
+							case 5: {
+								lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
+								break;
+							}
+							default:{
+								lines = calculate_lines( SELECTED, cubes, SELECTED.userdata.color );
+								break;
+							}
+						}
+						show_lines( scene, lines ); 
+					} 
+				}
+				// Relationen von vielen zu vielen (AAAAAH... die Performance)
+				else if ((parseInt( relation_mode ) === 1)){
+					lines = new Array();
+					for (var i=0; i < cubes.length; i++) {
+						var tmpLines = new Array();
+						tmpLines = calculate_lines( cubes[i], cubes, cubes[i].userdata.color );
+						for (var j=0; j < tmpLines.length; j++) {
+							lines.push( tmpLines[j] );
+						};
+					};
+					show_lines( scene, lines );	// optimierungen? 
+				}
+				}
+			modified = false; 
+		}
+	}
+}
+
 function hide_lines( scene, lines ){
 	for(var i = 0; i < lines.length; i++){
 		scene.remove( lines[i] );
@@ -251,6 +272,19 @@ function hide_lines( scene, lines ){
 function show_lines( scene, lines ){
 	for(var i = 0; i < lines.length; i++){
 		scene.add( lines[i] );
+	}
+}
+
+function hide_tempObjects( scene, lines ){
+	for(var i = 0; i < tempObj.length; i++){
+		scene.remove( tempObj[i] );
+	}
+	tempObj = new Array();
+}
+
+function show_tempObjects( scene, lines ){
+	for(var i = 0; i < tempObj.length; i++){
+		scene.add( tempObj[i] );
 	}
 }
 
@@ -502,8 +536,17 @@ function click_select(){
 	if (INTERSECTED){
 		SELECTED = INTERSECTED;
 	}
-	if ( (parseInt( status ) === 4) || (parseInt( status ) === 5) /*|| (parseInt( status ) === 6)*/ ) {
+	if ((parseInt( relation_mode ) === 0) && 
+		((parseInt( status ) === 4) || 
+		 (parseInt( status ) === 5) || 
+		 (parseInt( status ) === 6) ||
+		 (parseInt( status ) === 7))) {
 		modified = true;
 	} 
+}
+
+function setRelationMode(mode){
+	relation_mode = mode;
+	modified = true;
 }
 
