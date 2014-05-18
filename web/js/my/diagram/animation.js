@@ -160,6 +160,7 @@ function changeStatus( newStatus ){
 		status++;		
 	}
 	modified = true;
+	hide_tempObjects( scene, tempObj );
 } 
 
 function tweenToStatus( next ){
@@ -170,6 +171,7 @@ function tweenToStatus( next ){
 			break;
 		}
 		case 1: {
+			show_intro_control_div();
 			calculate_explode( targets );  
 			transform_cubes_tween( targets.explode, 1000 );
 			break;
@@ -224,7 +226,8 @@ function tweenToStatus( next ){
 function updateLines(){
 	// relationship lines:
 	if (modified) {
-		hide_lines( scene, lines );  
+		hide_lines( scene, lines );
+//		hide_tempObjects( scene, tempObj );  
 		// PERFORMANCE BEACHTEN - nur zeichen, wenn modified und nicht im Tween (tweening)!!
 		if (!tweening){
 			if ( (parseInt( status ) === 4) || 
@@ -283,14 +286,14 @@ function show_lines( scene, lines ){
 	}
 }
 
-function hide_tempObjects( scene, lines ){
+function hide_tempObjects( scene, tempObj ){
 	for(var i = 0; i < tempObj.length; i++){
 		scene.remove( tempObj[i] );
 	}
 	tempObj = new Array();
 }
 
-function show_tempObjects( scene, lines ){
+function show_tempObjects( scene, tempObj ){
 	for(var i = 0; i < tempObj.length; i++){
 		scene.add( tempObj[i] );
 	}
@@ -366,7 +369,7 @@ function draw_node( node ){
 	lastDepth = node.depth;
 
 	// the real cube:
-	var cube = cube_mesh( obj_treemap.scale.x, obj_treemap.scale.y,  obj_treemap.scale.z, cubeColor);
+	var cube = cube_mesh( obj_treemap.scale.x, obj_treemap.scale.y,  obj_treemap.scale.z, cubeColor, false);
 //	var cube = cube_mesh_multimaterial( obj_treemap.scale.x, obj_treemap.scale.y,  obj_treemap.scale.z, cubeColor);
 	
 	// INIT CUBE - POSITION & ROTATION AS EXPLODE
@@ -482,11 +485,15 @@ function find_intersections(){
 		raycaster.set( camera.position, vec3.sub( camera.position ).normalize() );
 		var intersects = raycaster.intersectObjects( scene.children );
 		if ( intersects.length > 0 ) {
-			if ( INTERSECTED != intersects[ 0 ].object ) {
+			var index = 0;
+			if( (tempObj[0]) && ( tempObj[0] == intersects[ index ].object)){
+				index++;
+			}
+			if ( INTERSECTED != intersects[ index ].object ) {
 				if ( INTERSECTED ) {
 					INTERSECTED.material.emissive = INTERSECTED.currentHex;//.setHex( INTERSECTED.currentHex );
 				}
-				INTERSECTED = intersects[ 0 ].object;
+				INTERSECTED = intersects[ index ].object;
 				INTERSECTED.currentHex = INTERSECTED.material.emissive;//.getHex();
 				INTERSECTED.material.emissive = 0xff0000;//.setHex( 0xff0000 );
 			}
@@ -515,7 +522,6 @@ function transform( targets ) {
 function transform_cubes_tween( targets, duration ) {
 	TWEEN.removeAll();
 	for ( var i = 0; i < cubes.length; i ++ ) {
-
 		var cube = cubes[ i ];
 		var target = targets[ i ];
 
@@ -552,7 +558,8 @@ function tweenStop(){
 	tweening = false;	
 }
 
-function click_select(){
+function click_select(){	
+	// Check for modifications 
 	if ((parseInt( relation_mode ) === 0) && 
 		((parseInt( status ) === 4) || 
 		 (parseInt( status ) === 5) || 
@@ -560,9 +567,24 @@ function click_select(){
 		 (parseInt( status ) === 7))) {
 		modified = (INTERSECTED)&&(SELECTED !== INTERSECTED);
 	} 
+	// set new selected element
 	if (INTERSECTED){
 		SELECTED = INTERSECTED;
 	}
+
+	// generate some temporary stuff / cube around the package-cluster
+	if ((SELECTED)&&(modified)&& /*(parseInt( relation_mode ) === 0) &&*/ 
+		((parseInt( status ) === 6) || (parseInt( status ) === 7))) {
+		
+		hide_tempObjects( scene, tempObj );
+		tempObj = new Array();
+			
+		var index = get_index_packageList(SELECTED.userdata.packageName); 	
+		var cube = cube_mesh( SECTION_SIZE, SECTION_SIZE,  SECTION_SIZE, SELECTED.userdata.color, true);
+		cube.position.set(SECTIONS[index].x, SECTIONS[index].y, SECTIONS[index].z);
+		tempObj.push( cube );
+		show_tempObjects( scene, tempObj );
+	}	
 }
 
 function setRelationMode(mode){
@@ -586,9 +608,14 @@ function hide_diagramm_controls(){
 function show_relation_control_div(){
 	var div = document.getElementById("diagram_relation");
 	div.style.display='block';	
+	document.getElementById('rb_single').checked="checked";
 }
 
 function show_intro_control_div(){
 	var div = document.getElementById("diagram_intro");
 	div.style.display='block';	
 }
+
+
+
+

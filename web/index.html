@@ -35,13 +35,13 @@
 			<button type="button" 	name="clear" 		 	id="btn_clear">Clear</button>
 			<button type="button" 	name="reset_view"		id="btn_reset_view">Reset View</button><br>
 			<div id="diagram_relation">
-				<input type="radio" name="Relation" value="1" id="single" 	checked="checked" onchange="setRelationMode(0)"> Singe-Relation<br> 
-				<input type="radio" name="Relation" value="2" id="all" 		onchange="setRelationMode(1)">All-Relation<br>
+				<input type="radio" name="Relation" value="1" id="rb_single" 	checked="checked" onchange="setRelationMode(0)"> Singe-Relation<br> 
+				<input type="radio" name="Relation" value="2" id="rb_all" 		onchange="setRelationMode(1)">All-Relation<br>
 			</div> 
 			<div id="diagram_intro">
-				<input type="radio" name="Relation" value="1" id="loc" 		checked="checked" onchange="setRelationMode(0)">Lines of Code<br> 
-				<input type="radio" name="Relation" value="2" id="pub_func" 		onchange="setRelationMode(1)">Anzahl Public Funktionen<br>
-				<input type="radio" name="Relation" value="2" id="other" 		onchange="setRelationMode(1)">[weitere...]<br>
+				<input type="radio" name="Relation" value="1" id="rb_loc" 		checked="checked" onchange="setIntroMode(0)">Lines of Code<br> 
+				<input type="radio" name="Relation" value="2" id="rb_pub_func" 	disabled="true"	onchange="setIntroMode(1)">Anzahl Public Funktionen<br>
+				<input type="radio" name="Relation" value="2" id="rb_other" 	disabled="true"	onchange="setIntroMode(2)">[weitere...]<br>
 			</div> 
 		</div>
 		<script src="./js/my/console/log.js" charset="utf-8"></script>

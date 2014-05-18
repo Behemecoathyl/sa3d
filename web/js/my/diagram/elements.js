@@ -1,7 +1,7 @@
 
-function cube_mesh(height, width, length, color) {
+function cube_mesh(height, width, length, color, wireframe) {
 	var geometry = new THREE.CubeGeometry( 1, 1, 1 );				
-	var material = new THREE.MeshLambertMaterial( { color: color, wireframe: false, vertexColors: false, transparent: true, opacity: 0.8 } );				
+	var material = new THREE.MeshLambertMaterial( { color: color, wireframe: wireframe, vertexColors: false, transparent: true, opacity: 0.8 } );				
 	var cube = new THREE.Mesh( geometry, material );
 	cube.scale.set(height, width, length);
 	return cube;
