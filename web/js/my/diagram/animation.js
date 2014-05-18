@@ -298,7 +298,19 @@ function show_tempObjects( scene, lines ){
 
 function draw_nodes( nodes ){
 	var i = 0;
-	while (nodes[i]){		
+	var currentPackageName = '';
+	init_packageList();
+	while (nodes[i]){
+		// TODO 
+		// in der Annahme, dass die 2. Ebene das Package ist...
+		if (nodes[i].depth == 1) {
+			currentPackageName = nodes[i].name;
+		}
+		// ... bekommen alle tieferen Klassen den Packagenamen aufgedrückt
+		nodes[i].packageName = currentPackageName;
+		nodes[i].id 		 = i;			
+		add_to_packageList( currentPackageName );
+		
 		draw_node(nodes[i]);
 		i++;
 	};
@@ -363,7 +375,7 @@ function draw_node( node ){
 	cube.scale.set(obj_explode.scale.x, obj_explode.scale.y, obj_explode.scale.z);
 	
 	// CUBE USERDATA
-	var jsonString = "{ \"name\":\"" + node.name + "\", \"size\":\"" + node.size +"\", \"depth\":\"" + node.depth +"\", \"color\":\"" + cubeColor +"\"}";
+	var jsonString = "{ \"name\":\"" + node.name + "\", \"size\":\"" + node.size +"\", \"depth\":\"" + node.depth +"\", \"color\":\"" + cubeColor +"\", \"packageName\":\"" + node.packageName +"\", \"id\":\"" + node.id +"\"}";
 	var out = jQuery.parseJSON( jsonString );
 	cube.userdata = out;
 
@@ -436,7 +448,7 @@ function update_treemap(){
 			draw_nodes(treemap_json);
 		});
 	}
-	changeStatus; //status ++;
+	changeStatus;
 	calculate_explode( targets );  
 	transform( targets.explode ); 	
 }
@@ -541,16 +553,16 @@ function tweenStop(){
 }
 
 function click_select(){
-	if (INTERSECTED){
-		SELECTED = INTERSECTED;
-	}
 	if ((parseInt( relation_mode ) === 0) && 
 		((parseInt( status ) === 4) || 
 		 (parseInt( status ) === 5) || 
 		 (parseInt( status ) === 6) ||
 		 (parseInt( status ) === 7))) {
-		modified = true;
+		modified = (INTERSECTED)&&(SELECTED !== INTERSECTED);
 	} 
+	if (INTERSECTED){
+		SELECTED = INTERSECTED;
+	}
 }
 
 function setRelationMode(mode){

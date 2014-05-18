@@ -145,7 +145,12 @@ function calculate_grid ( targets ) {
  */
 function calculate_relation( targets, type ){
 	var distance = 100 + 1 * cubes.length; //1000;						// "Radius"-Distanz zur Mitte = default 100 + Anzahl der Klassen
-	var package_count = 15;						// angenommene Package Anzahl - später hoffentlich bekannt
+	var package_count; 
+	if (packageList) {
+		package_count = packageList.length;	
+	} else {
+		package_count = 15;	// angenommene Package Anzahl - später hoffentlich bekannt
+	}						
 	
 	if(parseInt(type)==1){
 		sections = calculate_sections_arc( distance, package_count );
@@ -165,9 +170,16 @@ function calculate_relation( targets, type ){
 	}
 	for ( var i = 0; i < cubes.length; i ++ ) {
 		var object = new THREE.Object3D();
-		object.position.x = Math.random() * size - size/2 + sections[i%package_count].x;		// TODO % entfernen und durch logik ersetzen
-		object.position.y = Math.random() * size - size/2 + sections[i%package_count].y;
-		object.position.z = Math.random() * size - size/2 + sections[i%package_count].z;
+		if (packageList) {	
+			var index = get_index_packageList(cubes[i].userdata.packageName);
+			object.position.x = Math.random() * size - size/2 + sections[index].x;		
+			object.position.y = Math.random() * size - size/2 + sections[index].y;
+			object.position.z = Math.random() * size - size/2 + sections[index].z;
+		}else{	
+			object.position.x = Math.random() * size - size/2 + sections[i%package_count].x;		// TODO % entfernen und durch logik ersetzen
+			object.position.y = Math.random() * size - size/2 + sections[i%package_count].y;
+			object.position.z = Math.random() * size - size/2 + sections[i%package_count].z;
+		}
 		if(targets.treemap[i]){
 			var scale3 = 0.02 * distance; 																	// gleiche größe für alle Klassen 
 			object.scale.set(scale3, scale3, scale3);
@@ -289,21 +301,18 @@ function calculate_curved_lines( base, cubes, color ){
  * @param {Object} color Farbe
  */
 function calculate_lines( base, cubes, color ){
-	// TODO - beziehungen simulieren
-	// vorerst werden hier nur Linien vom 0. Element zu allen anderen gezogen:
 	var lines = new Array();
-	var rnd = parseInt(Math.random()*50);
-	for (var i=0; i < cubes.length; i++) {
-		if (i % rnd == 1){
-			var cube1, cube2;
-			cube1	= base;
-			cube2	= cubes[i];						
-			var spline 	= new THREE.SplineCurve3([
-			   cube1.position,
-			   cube2.position
-			]);
-			lines.push( line_mesh( spline, color ) );
-		}
+//	var rnd = parseInt(Math.random()*50);
+	var relations = generate_random_relation_array();
+	for (var i=0; i < relations.length; i++) {
+		var cube1, cube2;
+		cube1	= base;
+		cube2	= cubes[relations[i]];						
+		var spline 	= new THREE.SplineCurve3([
+		   cube1.position,
+		   cube2.position
+		]);
+		lines.push( line_mesh( spline, color ) );
 	};
 	return lines;
 }
@@ -329,4 +338,15 @@ function spline_vector_line( position1, position2 ){
 	return middle.add( inv_middle );
 //	return middle;
 }
+
+function generate_random_relation_array(){
+	var length = Math.random()*20 + 3;
+	var relations = new Array(); 
+	for (var i=0; i < length; i++) {
+	     relations.push( parseInt(Math.random()*cubes.length) );
+	};
+	return relations;	 
+}
+
+
 
