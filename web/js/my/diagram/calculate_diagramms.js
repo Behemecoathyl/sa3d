@@ -261,35 +261,32 @@ function calculate_sections_sphere( distance, count ){
  */
 function calculate_curved_lines( base, cubes, color ){
 	var limit = 20;
-	// TODO - beziehungen simulieren
-	// vorerst werden hier nur Linien vom 0. Element zu allen anderen gezogen:
 	var lines = new Array();
-	for (var i=0; i < cubes.length; i++) {
-		if (i % 5 == 0){
-			var cube1, cube2;
-			cube1	= base;
-			cube2	= cubes[i];
-						
-			var radius 	= cube1.position.length();		// Length of Vector in Spere equals radius
-			var pos		= cube1.position.clone();
-			var dist	= pos.sub(cube2.position);
-			if (dist.length() > radius) {
-				var spline 	= new THREE.SplineCurve3([
-				   cube1.position,
-				   //new THREE.Vector3(0, 0, 0),
-				   spline_vector_line( cube1.position, cube2.position ),
-				   cube2.position
-				]);
+	var relations = generate_random_relation_array();
+	for (var i=0; i < relations.length; i++) {
+		var cube1, cube2;
+		cube1	= base;
+		cube2	= cubes[relations[i]];						
+					
+		var radius 	= cube1.position.length();		// Length of Vector in Spere equals radius
+		var pos		= cube1.position.clone();
+		var dist	= pos.sub(cube2.position);
+		if (dist.length() > radius) {
+			var spline 	= new THREE.SplineCurve3([
+			   cube1.position,
+			   //new THREE.Vector3(0, 0, 0),
+			   spline_vector_line( cube1.position, cube2.position ),
+			   cube2.position
+			]);
 
-			} else {
-				var spline 	= new THREE.SplineCurve3([
-				   cube1.position,
-				   spline_vector_line( cube1.position, cube2.position ),
-				   cube2.position
-				]);
-			}
-			lines.push( line_mesh( spline, color ) );
+		} else {
+			var spline 	= new THREE.SplineCurve3([
+			   cube1.position,
+			   spline_vector_line( cube1.position, cube2.position ),
+			   cube2.position
+			]);
 		}
+		lines.push( line_mesh( spline, color ) );
 	};
 	return lines;
 }
