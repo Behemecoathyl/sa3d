@@ -39,9 +39,10 @@
 				<input type="radio" name="Relation" value="2" id="rb_all" 		onchange="setRelationMode(1)">All-Relation<br>
 			</div> 
 			<div id="diagram_intro">
-				<input type="radio" name="Relation" value="1" id="rb_loc" 		checked="checked" onchange="setIntroMode(0)">Lines of Code<br> 
-				<input type="radio" name="Relation" value="2" id="rb_pub_func" 	disabled="true"	onchange="setIntroMode(1)">Anzahl Public Funktionen<br>
-				<input type="radio" name="Relation" value="2" id="rb_other" 	disabled="true"	onchange="setIntroMode(2)">[weitere...]<br>
+				<input type="radio" name="Relation" value="1" id="rb_loc" 		checked="checked" onchange="setIntroMode(0)">Lines of Code [LOC]<br> 
+				<input type="radio" name="Relation" value="2" id="rb_nom" 		onchange="setIntroMode(1)">Number of Methods [NOM]<br>
+				<input type="radio" name="Relation" value="2" id="rb_noa" 		onchange="setIntroMode(2)">Number of Attributes [NOA]<br>
+				<input type="radio" name="Relation" value="2" id="rb_more" 		disabled="disabled">[weitere möglich...]<br>
 			</div> 
 		</div>
 		<script src="./js/my/console/log.js" charset="utf-8"></script>

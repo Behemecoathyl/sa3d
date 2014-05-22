@@ -22,7 +22,7 @@ var modified = false;
 var tweening = false;
 
 var relation_mode = 0;		// 0 - Single Relation, 1 - All Relation
-var intro_mode = 0;			// 0 - Lines of Code, 1 - Anzahl Public Functionen, 2 - usw...
+var intro_mode = 0;			// 0 - LOC, 1 - NOM, 2 - NOA, ...
 var status = 0;            // 0-7            
 var diagram_radio_array = { idxToValue:	[	"undefinded", 
 											"intro",	
@@ -173,7 +173,7 @@ function tweenToStatus( next ){
 		}
 		case 1: {
 			show_intro_control_div();
-			calculate_explode( targets );  
+			calculate_explode( targets, intro_mode, false );  
 			transform_cubes_tween( targets.explode, 1000 );
 			break;
 		}		
@@ -212,7 +212,7 @@ function tweenToStatus( next ){
 		}
 		default: { 
 			changeStatus( 1 ); 
-			calculate_explode( targets ); 
+			calculate_explode( targets, intro_mode, false ); 
 			transform_cubes_tween( targets.explode, 1000 ); 
 			break;
 		}		
@@ -476,7 +476,7 @@ function update_treemap(){
 		});
 	}
 	changeStatus;
-	calculate_explode( targets );  
+	calculate_explode( targets, intro_mode, false );  
 	transform( targets.explode ); 	
 }
 
@@ -512,6 +512,9 @@ function find_intersections(){
 			var index = 0;
 			if( (tempObj[0]) && ( tempObj[0] == intersects[ index ].object)){
 				index++;
+				if (index >= intersects.length){
+					return;
+				}
 			}
 			if (INTERSECTED != intersects[ index ].object ) {
 				if ( INTERSECTED ) {
@@ -618,8 +621,8 @@ function setRelationMode(mode){
 
 function setIntroMode(mode){
 	intro_mode = mode;
-	// TODO tween...
-	// neu berechnen
+	calculate_explode( targets, intro_mode, true );
+	transform_cubes_tween( targets.explode, 1000 );	
 }
 
 function hide_diagramm_controls(){

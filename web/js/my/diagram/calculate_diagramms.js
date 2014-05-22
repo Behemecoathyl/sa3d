@@ -50,21 +50,52 @@ function local_scale(object) {
 /**
  * Erzeugt die Target-Elemente für das Intro Diagramm
  */
-function calculate_explode(targets) {
+function calculate_explode(targets, introMode, scaleOnly) {
 	var size = 1500;
-	if (targets.explode.length > 0) {
+	var isEmpty = true;
+	if ((targets.explode.length > 0)&&(!scaleOnly)) {
 		targets.explode = new Array();
+	}else{
+		isEmpty = false;
 	}
 	for (var i = 0; i < cubes.length; i++) {
-		var object = new THREE.Object3D();
-		object.position.x = Math.random() * size - size / 2;
-		object.position.y = Math.random() * size - size / 2;
-		object.position.z = Math.random() * size - size / 2;
-		object.rotation.x = Math.random();
-		object.rotation.y = Math.random();
-		object.rotation.z = Math.random();
+		
+		var object;
+		if(isEmpty){
+			object = new THREE.Object3D(); 	
+		} else {
+			object = targets.explode[i];
+		}
+
+		if((isEmpty)){
+			object.position.x = Math.random() * size - size / 2;
+			object.position.y = Math.random() * size - size / 2;
+			object.position.z = Math.random() * size - size / 2;
+			object.rotation.x = Math.random();
+			object.rotation.y = Math.random();
+			object.rotation.z = Math.random();
+		}
+
 		if (targets.treemap[i]) {
-			var scale3 = Math.pow(targets.treemap[i].scale.x * targets.treemap[i].scale.y * targets.treemap[i].scale.z, 1 / 3);
+			var scale3;
+			switch (parseInt(introMode)){
+				case 0:{
+					scale3 = Math.pow(cubes[i].userData.LOC * 100, 1 / 3);
+					break;					
+				} 
+				case 1: {
+					scale3 = Math.pow(cubes[i].userData.NOM * 1000, 1 / 3);
+					break;					
+				}
+				case 2: {
+					scale3 = Math.pow(cubes[i].userData.NOA * 1000, 1 / 3);
+					break;					
+				}
+				default: {
+					scale3 = Math.pow(cubes[i].userData.LOC * 100, 1 / 3);
+					break;					
+				}
+			}
 			object.scale.set(scale3, scale3, scale3);
 		}
 		targets.explode.push(object);
