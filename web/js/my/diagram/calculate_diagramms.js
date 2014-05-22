@@ -12,7 +12,12 @@ function calculate_sphere(targets) {
 	if (targets.sphere.length == 0) {
 		var vector = new THREE.Vector3();
 		var l = cubes.length;
-		var radius = l * 1.5;
+		var radius;
+		if(l<500){
+			radius = l * 3;
+		}else{
+			radius = l * 1.5;
+		}
 		for (var i = 0; i < l; i++) {
 			var phi = Math.acos(-1 + (2 * i ) / l);
 			var theta = Math.sqrt(l * Math.PI) * phi;
@@ -149,7 +154,7 @@ function calculate_relation(targets, type) {
 	for (var i = 0; i < cubes.length; i++) {
 		var object = new THREE.Object3D();
 		if (packageList) {
-			var index = get_index_packageList(cubes[i].userdata.packageName);
+			var index = get_index_packageList(cubes[i].userData.packageName);
 			object.position.x = Math.random() * size - size / 2 + SECTIONS[index].x;
 			object.position.y = Math.random() * size - size / 2 + SECTIONS[index].y;
 			object.position.z = Math.random() * size - size / 2 + SECTIONS[index].z;
@@ -242,28 +247,31 @@ function calculate_sections_sphere(distance, count) {
  * @param {Object} color Farbe
  */
 function calculate_curved_lines(base, cubes, color) {
-	var limit = 20;
 	var lines = new Array();
-	var relations = generate_random_relation_array();
-	for (var i = 0; i < relations.length; i++) {
-		var cube1, cube2;
-		cube1 = base;
-		cube2 = cubes[relations[i]];
-
-		var radius = cube1.position.length();
-		// Length of Vector in Spere equals radius
-		var pos = cube1.position.clone();
-		var dist = pos.sub(cube2.position);
-		if (dist.length() > radius) {
-			var spline = new THREE.SplineCurve3([cube1.position,
-			//new THREE.Vector3(0, 0, 0),
-			spline_vector_line(cube1.position, cube2.position), cube2.position]);
-
-		} else {
-			var spline = new THREE.SplineCurve3([cube1.position, spline_vector_line(cube1.position, cube2.position), cube2.position]);
-		}
-		lines.push(line_mesh(spline, color));
-	};
+//	var relations = generate_random_relation_array();
+	if(base.userData.relatedTo){
+		for (var i = 0; i < base.userData.relatedTo.length; i++) {
+			var cube1, cube2;
+			cube1 = base;
+			var index = nameList.indexOf(cube1.userData.relatedTo[i]);
+			if(index != -1){
+				cube2 = cubes[index];	
+				var radius = cube1.position.length();
+				// Length of Vector in Spere equals radius
+				var pos = cube1.position.clone();
+				var dist = pos.sub(cube2.position);
+				if (dist.length() > radius) {
+					var spline = new THREE.SplineCurve3([cube1.position,
+					//new THREE.Vector3(0, 0, 0),
+					spline_vector_line(cube1.position, cube2.position), cube2.position]);
+		
+				} else {
+					var spline = new THREE.SplineCurve3([cube1.position, spline_vector_line(cube1.position, cube2.position), cube2.position]);
+				}
+				lines.push(line_mesh(spline, color));
+			}
+		};
+	}
 	return lines;
 }
 
@@ -275,14 +283,23 @@ function calculate_curved_lines(base, cubes, color) {
  */
 function calculate_lines(base, cubes, color) {
 	var lines = new Array();
-	var relations = generate_random_relation_array();
-	for (var i = 0; i < relations.length; i++) {
-		var cube1, cube2;
-		cube1 = base;
-		cube2 = cubes[relations[i]];
-		var spline = new THREE.SplineCurve3([cube1.position, cube2.position]);
-		lines.push(line_mesh(spline, color));
-	};
+	//var relations = generate_random_relation_array();
+	if(base.userData.relatedTo){
+		for (var i = 0; i < base.userData.relatedTo.length; i++) {
+			var cube1, cube2;
+			cube1 = base;
+			var index = nameList.indexOf(cube1.userData.relatedTo[i]);
+			if(index != -1){
+				cube2 = cubes[index];
+				if (cube1.userData.relatedTo[i] !== cube2.fullName)/* Klasse darf nicht auf sich selbst referenzieren */{
+					var spline = new THREE.SplineCurve3([cube1.position, cube2.position]);
+					lines.push(line_mesh(spline, color));
+				}else{
+					log('Klasse ' + cube1.userData.relatedTo[i] + ' referenziert auf sich selbst!');
+				}
+			}
+		};
+	}
 	return lines;
 }
 

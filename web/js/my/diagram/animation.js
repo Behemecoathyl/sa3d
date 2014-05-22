@@ -14,6 +14,7 @@ var diagramm_width  = 500;
 
 var treemap_json;
 var cubes = new Array();  // .length .push() .pop()
+var nameList = new Array();		// enthält nur Namen der Elemente, um id Mapping zu ermöglichen
 var lines = new Array();  // .length .push() .pop()
 var tempObj = new Array();
 var targets = { explode: [], treemap: [], sphere: [], helix: [], grid: [], relation: [], relationSphere: [] };
@@ -133,8 +134,8 @@ function animate() {
 	// selection and intersection:
 	find_intersections();
 	if(INTERSECTED &&  INTERSECTED instanceof THREE.Mesh){ /*INTERSECTED !== axes && INTERSECTED !== select_sphere){
-		var output = INTERSECTED.userdata.name + " (" + INTERSECTED.userdata.size + ") ";*/
-		var output = JSON.stringify(INTERSECTED.userdata);
+		var output = INTERSECTED.userData.name + " (" + INTERSECTED.userData.size + ") ";*/
+		var output = JSON.stringify(INTERSECTED.userData);
 		document.getElementById("classname").innerHTML = output;  
 	}
 	
@@ -240,15 +241,15 @@ function updateLines(){
 					if(SELECTED &&  SELECTED instanceof THREE.Mesh){
 						switch (parseInt(status)){
 							case 4: {
-								lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
+								lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userData.color );
 								break;
 							}
 							case 5: {
-								lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userdata.color );
+								lines = calculate_curved_lines( SELECTED, cubes, SELECTED.userData.color );
 								break;
 							}
 							default:{
-								lines = calculate_lines( SELECTED, cubes, SELECTED.userdata.color );
+								lines = calculate_lines( SELECTED, cubes, SELECTED.userData.color );
 								break;
 							}
 						}
@@ -260,7 +261,7 @@ function updateLines(){
 					lines = new Array();
 					for (var i=0; i < cubes.length; i++) {
 						var tmpLines = new Array();
-						tmpLines = calculate_lines( cubes[i], cubes, cubes[i].userdata.color );
+						tmpLines = calculate_lines( cubes[i], cubes, cubes[i].userData.color );
 						for (var j=0; j < tmpLines.length; j++) {
 							lines.push( tmpLines[j] );
 						};
@@ -304,10 +305,14 @@ function draw_nodes( nodes ){
 	var currentPackageName = '';
 	init_packageList();
 	while (nodes[i]){
-		// TODO 
-		// in der Annahme, dass die 2. Ebene das Package ist...
-		if (nodes[i].depth == 1) {
-			currentPackageName = nodes[i].name;
+		if (i>1){
+			// Package des aktuellen Elementes ist immer fullName des darunter liegenden Elementes
+			if (nodes[i].depth > nodes[i-1].depth){
+				currentPackageName = nodes[i-1].fullName;
+				if(currentPackageName === undefined){
+					currentPackageName = nodes[i-1].name;
+				}
+			}
 		}
 		// ... bekommen alle tieferen Klassen den Packagenamen aufgedrückt
 		nodes[i].packageName = currentPackageName;
@@ -352,8 +357,13 @@ function draw_node( node ){
 	obj_explode.rotation.x = Math.random();
 	obj_explode.rotation.y = Math.random();
 	obj_explode.rotation.z = Math.random();
-	var scale3 = Math.pow(box_width*box_height*box_depth, 1/3);
-	obj_explode.scale.set(scale3, scale3, scale3);
+
+	var scale3 = Math.pow( node.LOC * 100 /*box_width*box_height*box_depth*/ , 1/3);
+	if(scale3 !== undefined){
+		obj_explode.scale.set(scale3, scale3, scale3);
+	}else{
+		obj_explode.scale.set(0, 0, 0);  // nur nicht sichtbar
+	}
 	targets.explode.push( obj_explode );
 
 	// generate colors
@@ -377,12 +387,26 @@ function draw_node( node ){
 	cube.rotation.set(obj_explode.rotation.x, obj_explode.rotation.y, obj_explode.rotation.z);
 	cube.scale.set(obj_explode.scale.x, obj_explode.scale.y, obj_explode.scale.z);
 	
-	// CUBE USERDATA
-	var jsonString = "{ \"name\":\"" + node.name + "\", \"size\":\"" + node.size +"\", \"depth\":\"" + node.depth +"\", \"color\":\"" + cubeColor +"\", \"packageName\":\"" + node.packageName +"\", \"id\":\"" + node.id +"\"}";
+	// CUBE userData
+	var jsonString = "{ \"fullName\":\"" + node.fullName
+					 +"\", \"id\":\"" + node.id 
+					 +"\", \"packageName\":\"" + node.packageName 
+					 +"\", \"name\":\"" + node.name 					 
+					 +"\", \"LOC\":\"" + node.LOC 
+					 +"\", \"NOA\":\"" + node.NOA 
+					 +"\", \"NOM\":\"" + node.NOM					  
+					 +"\", \"depth\":\"" + node.depth 
+					 + "\", \"size\":\"" + node.size 
+					 +"\", \"color\":\"" + cubeColor
+					 +"\"}";
 	var out = jQuery.parseJSON( jsonString );
-	cube.userdata = out;
+	if(node.relatedTo !== undefined){
+		out.relatedTo = node.relatedTo;
+	}
+	cube.userData = out;
 
 	cubes.push( cube );
+	nameList.push( node.fullName );
 	scene.add( cube );
 }
 
@@ -445,7 +469,7 @@ function update_treemap(){
 		treemap_json = treemap.nodes(json_out);	
 		draw_nodes(treemap_json);
 	}else{
-	    filename = "files/treemap_sample_big.json";
+	    filename = "files/RaceKILLER.json";
 		d3.json(filename, function( error, json_out ) {			
 			treemap_json = treemap.nodes(json_out);	
 			draw_nodes(treemap_json);
@@ -489,7 +513,7 @@ function find_intersections(){
 			if( (tempObj[0]) && ( tempObj[0] == intersects[ index ].object)){
 				index++;
 			}
-			if ( INTERSECTED != intersects[ index ].object ) {
+			if (INTERSECTED != intersects[ index ].object ) {
 				if ( INTERSECTED ) {
 					INTERSECTED.material.emissive = INTERSECTED.currentHex;//.setHex( INTERSECTED.currentHex );
 				}
@@ -579,8 +603,8 @@ function click_select(){
 		hide_tempObjects( scene, tempObj );
 		tempObj = new Array();
 			
-		var index = get_index_packageList(SELECTED.userdata.packageName); 	
-		var cube = cube_mesh( SECTION_SIZE, SECTION_SIZE,  SECTION_SIZE, SELECTED.userdata.color, true);
+		var index = get_index_packageList(SELECTED.userData.packageName); 	
+		var cube = cube_mesh( SECTION_SIZE, SECTION_SIZE,  SECTION_SIZE, SELECTED.userData.color, true);
 		cube.position.set(SECTIONS[index].x, SECTIONS[index].y, SECTIONS[index].z);
 		tempObj.push( cube );
 		show_tempObjects( scene, tempObj );
