@@ -22,7 +22,7 @@ var modified = false;
 var tweening = false;
 
 var relation_mode = 0;		// 0 - Single Relation, 1 - All Relation
-var intro_mode = 0;			// 0 - LOC, 1 - NOM, 2 - NOA, ...
+var intro_mode = 0;			// 0 - LOC, 1 - NOM, 2 - NOA, 3 - NOC, 4 - CBO, 5 - DIT, 6 - RFC
 var status = 0;            // 0-7            
 var diagram_radio_array = { idxToValue:	[	"undefinded", 
 											"intro",	
@@ -136,7 +136,10 @@ function animate() {
 	if(INTERSECTED &&  INTERSECTED instanceof THREE.Mesh){ /*INTERSECTED !== axes && INTERSECTED !== select_sphere){
 		var output = INTERSECTED.userData.name + " (" + INTERSECTED.userData.size + ") ";*/
 		var output = JSON.stringify(INTERSECTED.userData);
-		document.getElementById("classname").innerHTML = output;  
+		var div = document.getElementById("classname");
+		if (div){
+			div.innerHTML = output;
+		}  
 	}
 	
 	renderer.render( scene, camera );
@@ -389,17 +392,25 @@ function draw_node( node ){
 	
 	// CUBE userData
 	var jsonString = "{ \"fullName\":\"" + node.fullName
+					 +"\", \"name\":\"" + node.name 
 					 +"\", \"id\":\"" + node.id 
 					 +"\", \"packageName\":\"" + node.packageName 
-					 +"\", \"name\":\"" + node.name 					 
-					 +"\", \"LOC\":\"" + node.LOC 
-					 +"\", \"NOA\":\"" + node.NOA 
-					 +"\", \"NOM\":\"" + node.NOM					  
 					 +"\", \"depth\":\"" + node.depth 
 					 + "\", \"size\":\"" + node.size 
 					 +"\", \"color\":\"" + cubeColor
 					 +"\"}";
+					 
+	var metricsString = "{ \"LOC\":\"" + node.LOC 
+					 +"\", \"NOA\":\"" + node.NOA 
+					 +"\", \"NOM\":\"" + node.NOM					  
+					 +"\", \"NOC\":\"" + node.NOC					  
+					 +"\", \"CBO\":\"" + node.CBO					  
+					 +"\", \"DIT\":\"" + node.DIT					  
+					 +"\", \"RFC\":\"" + node.RFC					  
+					 +"\"}";
+
 	var out = jQuery.parseJSON( jsonString );
+	out.metrics = jQuery.parseJSON( metricsString );
 	if(node.relatedTo !== undefined){
 		out.relatedTo = node.relatedTo;
 	}
@@ -469,7 +480,7 @@ function update_treemap(){
 		treemap_json = treemap.nodes(json_out);	
 		draw_nodes(treemap_json);
 	}else{
-	    filename = "files/RaceKILLER.json";
+	    filename = "files/Slick2D.json";
 		d3.json(filename, function( error, json_out ) {			
 			treemap_json = treemap.nodes(json_out);	
 			draw_nodes(treemap_json);

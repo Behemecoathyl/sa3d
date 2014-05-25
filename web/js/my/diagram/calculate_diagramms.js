@@ -79,20 +79,43 @@ function calculate_explode(targets, introMode, scaleOnly) {
 		if (targets.treemap[i]) {
 			var scale3;
 			switch (parseInt(introMode)){
+				/* [Lines of Code - LOC] */
 				case 0:{
-					scale3 = Math.pow(cubes[i].userData.LOC * 100, 1 / 3);
+					scale3 = Math.pow(cubes[i].userData.metrics.LOC * 100, 1 / 3);
 					break;					
 				} 
+				/* [Number of Methods - NOM] */
 				case 1: {
-					scale3 = Math.pow(cubes[i].userData.NOM * 1000, 1 / 3);
+					scale3 = Math.pow(cubes[i].userData.metrics.NOM * 1000, 1 / 3);
 					break;					
 				}
+				/* [Number of Attributes - NOA] */
 				case 2: {
-					scale3 = Math.pow(cubes[i].userData.NOA * 1000, 1 / 3);
+					scale3 = Math.pow(cubes[i].userData.metrics.NOA * 1000, 1 / 3);
+					break;					
+				}
+				/* [Number of Childs - NOC] */
+				case 3: {
+					scale3 = Math.pow(cubes[i].userData.metrics.NOC * 1000, 1 / 3);
+					break;					
+				}
+				/* [Coupling between Objects - CBO] */
+				case 4: {
+					scale3 = Math.pow(cubes[i].userData.metrics.CBO * 1000, 1 / 3);
+					break;					
+				}
+				/* [Depth of Inheritence - DIT] */
+				case 5: {
+					scale3 = Math.pow(cubes[i].userData.metrics.DIT * 1000, 1 / 3);
+					break;					
+				}
+				/* [Response for a Class - RFC] */
+				case 6: {
+					scale3 = Math.pow(cubes[i].userData.metrics.RFC * 1000, 1 / 3);
 					break;					
 				}
 				default: {
-					scale3 = Math.pow(cubes[i].userData.LOC * 100, 1 / 3);
+					scale3 = Math.pow(cubes[i].userData.metrics.LOC * 100, 1 / 3);
 					break;					
 				}
 			}
