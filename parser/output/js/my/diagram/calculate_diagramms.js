@@ -1,0 +1,619 @@
+/**
+ * @author Behemecoathyl
+ */
+
+var SECTIONS;
+var SECTION_SIZE;
+
+/**
+ * Erzeugt die Target-Elemente für das Intro Diagramm
+ */
+function calculate_explode(targets, introMode, scaleOnly) {
+	var size = 1500;
+	var isEmpty = true;
+	if ((targets.explode.length > 0)&&(!scaleOnly)) {
+		targets.explode = new Array();
+	}else{
+		isEmpty = false;
+	}
+	for (var i = 0; i < cubes.length; i++) {
+		
+		var object;
+		if(isEmpty){
+			object = new THREE.Object3D(); 	
+		} else {
+			object = targets.explode[i];
+		}
+
+		if((isEmpty)){
+			object.position.x = Math.random() * size - size / 2;
+			object.position.y = Math.random() * size - size / 2;
+			object.position.z = Math.random() * size - size / 2;
+			object.rotation.x = Math.random();
+			object.rotation.y = Math.random();
+			object.rotation.z = Math.random();
+		}
+
+		var scale3;
+		switch (parseInt(introMode)){
+			/* [Lines of Code - LOC] */
+			case 0:{
+				scale3 = Math.pow(cubes[i].userData.metrics.LOC * 100, 1 / 3);
+				break;					
+			} 
+			/* [Number of Methods - NOM] */
+			case 1: {
+				scale3 = Math.pow(cubes[i].userData.metrics.NOM * 1000, 1 / 3);
+				break;					
+			}
+			/* [Number of Attributes - NOA] */
+			case 2: {
+				scale3 = Math.pow(cubes[i].userData.metrics.NOA * 1000, 1 / 3);
+				break;					
+			}
+			/* [Number of Childs - NOC] */
+			case 3: {
+				scale3 = Math.pow(cubes[i].userData.metrics.NOC * 1000, 1 / 3);
+				break;					
+			}
+			/* [Coupling between Objects - CBO] */
+			case 4: {
+				scale3 = Math.pow(cubes[i].userData.metrics.CBO * 1000, 1 / 3);
+				break;					
+			}
+			/* [Depth of Inheritence - DIT] */
+			case 5: {
+				scale3 = Math.pow(cubes[i].userData.metrics.DIT * 1000, 1 / 3);
+				break;					
+			}
+			/* [Response for a Class - RFC] */
+			case 6: {
+				scale3 = Math.pow(cubes[i].userData.metrics.RFC * 1000, 1 / 3);
+				break;					
+			}
+			default: {
+				scale3 = Math.pow(cubes[i].userData.metrics.LOC * 100, 1 / 3);
+				break;					
+			}
+		}
+		if((scale3 == undefined)||(scale3 == NaN)||(scale3 == null)){
+			object.scale.set(0, 0, 0);  // nur nicht sichtbar
+		}else{
+			object.scale.set(scale3, scale3, scale3);
+		}
+		targets.explode.push(object);
+	}
+}
+
+/**
+ * Erzeugt die Target-Elemente für das Treemap Diagramm
+ * abhängig vom metricsMode
+ */
+function calculate_treemap( treemap_json, targets, metricsMode, callbackTween ){
+	if( (parseInt(metricsMode) === 0) && (targets.treemap.LOC.length == 0) ||
+		(parseInt(metricsMode) === 1) && (targets.treemap.NOM.length == 0) ||
+		(parseInt(metricsMode) === 2) && (targets.treemap.NOA.length == 0) ||
+		(parseInt(metricsMode) === 3) && (targets.treemap.NOC.length == 0) ||
+		(parseInt(metricsMode) === 4) && (targets.treemap.CBO.length == 0) ||
+		(parseInt(metricsMode) === 5) && (targets.treemap.DIT.length == 0) ||
+		(parseInt(metricsMode) === 6) && (targets.treemap.RFC.length == 0) ){
+	// TREEMAP --------- INIT ----------------------------
+		var treemap = d3.layout.treemap();
+		treemap.size([diagramm_width, diagramm_height]);
+		treemap.mode(["squarify"]);			// "squarify"; "slice-dice"; "slice"; "dice";
+		treemap.ratio(diagramm_height / diagramm_width * 0.5 * (1 + Math.sqrt(5)));
+		treemap.sticky([true]);
+		treemap.round([false]);
+		treemap.children(function(d){ 
+							return d.children; 
+			  			});  // instructs the algorithm to find children by looking for node.kids instead of the default node.children
+		treemap.value(function(d){ 
+							switch (parseInt(metrics_mode)){
+								case 0:{
+			  						return d.LOC;
+								}	
+								case 1:{
+			  						return d.NOM;
+								}	
+								case 2:{
+			  						return d.NOA;
+								}	
+								case 3:{
+			  						return d.NOC;
+								}	
+								case 4:{
+			  						return d.CBO;
+								}	
+								case 5:{
+			  						return d.DIT;
+								}	
+								case 6:{
+			  						return d.RFC;
+								}	
+								default: {
+	  								return d.LOC;
+								}						
+							}
+						});  // similarly, value of the nodes is the age attribute of the node
+		
+		treemap.sort(function(a,b) { 
+										switch (parseInt(metrics_mode)){
+											case 0:{
+												return a.LOC - b.LOC; 
+											}	
+											case 1:{
+												return a.NOM - b.NOM; 
+											}	
+											case 2:{
+												return a.NOA - b.NOA; 
+											}	
+											case 3:{
+												return a.NOC - b.NOC; 
+											}	
+											case 4:{
+												return a.CBO - b.CBO; 
+											}	
+											case 5:{
+												return a.DIT - b.DIT; 
+											}	
+											case 6:{
+												return a.RFC - b.RFC; 
+											}	
+											default: {
+												return a.LOC - b.LOC; 
+											}						
+										}
+									});  // TODO besseren SORT finden
+		treemap.padding(2);
+	
+		// TREEMAP --------- CALCULATE -----------------------
+	 	var jsonString = document.getElementById("ta_input").value;
+	 	var json_out;
+	 	if(jsonString != ""){ 
+	 		jsonString = jsonString.replace(/(\r\n|\n|\r)/gm,"");
+	 		jsonString = jsonString.replace(/\s/g, "");
+	 		json_out = jQuery.parseJSON( jsonString );
+			var nodes = treemap.nodes(json_out);
+			generate_treemap_targets( nodes, metricsMode );
+			if(callbackTween){
+				callbackTween();
+			}	
+		}else{
+		    filename = "files/Slick2D.json";
+			d3.json(filename, function( error, json_out ) {			
+				var nodes = treemap.nodes(json_out);
+				generate_treemap_targets( nodes, metricsMode );	
+				if(callbackTween){
+					callbackTween();
+				}	
+			});
+		}
+	}else{
+		if(callbackTween){
+			callbackTween();
+		}	
+	}
+}
+
+function generate_treemap_targets( nodes, metricsMode ){
+	var i = 0;
+	while (nodes[i]){
+		var target = generate_treemap_target_object(nodes[i]);
+		if (parseInt(metricsMode) === 0){
+			targets.treemap.LOC.push( target );
+			
+		}else if (parseInt(metricsMode) === 1){	
+			targets.treemap.NOM.push( target );
+			
+		}else if (parseInt(metricsMode) === 2){	
+			targets.treemap.NOA.push( target );
+			
+		}else if (parseInt(metricsMode) === 3){	
+			targets.treemap.NOC.push( target );
+			
+		}else if (parseInt(metricsMode) === 4){	
+			targets.treemap.CBO.push( target );
+			
+		}else if (parseInt(metricsMode) === 5){	
+			targets.treemap.DIT.push( target );
+			
+		}else if (parseInt(metricsMode) === 6){	
+			targets.treemap.RFC.push( target );
+		}												
+		i++;
+	}
+}
+
+function generate_treemap_target_object( node ){
+	var box_width 	= node.dx;
+	var box_height	= node.dy;
+	var box_depth	= 25;
+	
+	var pos_x 	= node.x + (box_width/2);
+	var pos_y	= node.y + (box_height/2);
+	var pos_z 	= node.depth * 60 + 25/2;
+
+	// TREEMAP - POSITION 
+	var obj_treemap = new THREE.Object3D();
+	obj_treemap.position.x = pos_x - (diagramm_width/2);
+	obj_treemap.position.y = pos_z;
+	obj_treemap.position.z = pos_y - (diagramm_height/2);
+
+	obj_treemap.scale.x = box_width;
+	obj_treemap.scale.y = box_depth;
+	obj_treemap.scale.z = box_height;
+	return obj_treemap;    
+}
+
+
+/**
+ * Erzeugt die Target-Elemente für das Sphere Diagramm
+ */
+function calculate_sphere(targets) {
+	if (targets.sphere.length == 0) {
+		var vector = new THREE.Vector3();
+		var l = cubes.length;
+		var radius;
+		if(l<500){
+			radius = l * 3;
+		}else{
+			radius = l * 1.5;
+		}
+		for (var i = 0; i < l; i++) {
+			var phi = Math.acos(-1 + (2 * i ) / l);
+			var theta = Math.sqrt(l * Math.PI) * phi;
+
+			var object = new THREE.Object3D();
+			object.position.x = radius * Math.cos(theta) * Math.sin(phi);
+			object.position.y = radius * Math.sin(theta) * Math.sin(phi);
+			object.position.z = radius * Math.cos(phi);
+
+			local_scale(object);
+
+			vector.copy(object.position).multiplyScalar(2);
+			object.lookAt(vector);
+			targets.sphere.push(object);
+		}
+	}
+}
+
+/**
+ * lokale Skalierung der Objekte für die Sphere
+ */
+function local_scale(object) {
+	if (object) {
+		object.scale.x = 40;
+		object.scale.y = 40;
+		object.scale.z = 5;
+	}
+}
+
+/**
+ * Erzeugt die Target-Elemente für das Helix Diagramm
+ */
+function calculate_helix(targets) {
+	if (targets.helix.length == 0) {
+		var vector = new THREE.Vector3();
+		var l = cubes.length;
+		var radius = l;
+		for (var i = 0; i < l; i++) {
+			var phi = i * 0.175 + Math.PI;
+
+			var object = new THREE.Object3D();
+			object.position.x = radius * Math.sin(phi);
+			object.position.y = -(i * 2 ) + (radius / 2);
+			object.position.z = radius * Math.cos(phi);
+
+			local_scale(object);
+
+			vector.x = object.position.x * 2;
+			vector.y = object.position.y;
+			vector.z = object.position.z * 2;
+			object.lookAt(vector);
+			targets.helix.push(object);
+		}
+	}
+}
+
+/**
+ * Erzeugt die Target-Elemente für das Grid Diagramm
+ * @DEPRECIATED
+ */
+function calculate_grid(targets) {
+	if (targets.grid.length == 0) {
+		var l = cubes.length;
+		var distance = l / 2;
+		for (var i = 0; i < l; i++) {
+			var object = new THREE.Object3D();
+			object.position.x = ((i % 5 ) * (distance / 2) ) - distance;
+			object.position.y = (-(Math.floor(i / 5) % 5 ) * (distance / 2) ) + distance;
+			object.position.z = ( Math.floor(i / 25) ) * (distance / 2) - distance;
+
+			local_scale(object);
+			targets.grid.push(object);
+		}
+	}
+}
+
+/**
+ * Berechnet Sektionen auf einer Kreisbahn
+ * @param {Number} type 1 - Relation auf Kreisbasis, 2 - Relation auf Kugelhülle
+ */
+function calculate_relation(targets, type) {
+	if(((targets.relationArc.length == 0)&&(parseInt(type) == 1)) ||
+		((targets.relationSphere.length == 0)&&(parseInt(type) == 2))){ 
+		var distance = 100 + 1 * cubes.length;
+		//1000;						// "Radius"-Distanz zur Mitte = default 100 + Anzahl der Klassen
+		var package_count;
+		if (packageList) {
+			package_count = packageList.length;
+		} else {
+			package_count = 15;
+			// angenommene Package Anzahl - später hoffentlich bekannt
+		}
+	
+		if (parseInt(type) == 1) {
+			SECTIONS = calculate_sections_arc(distance, package_count);
+		} else if (parseInt(type) == 2) {
+			SECTIONS = calculate_sections_sphere(distance, package_count);
+		}
+	
+		// Zufallswerte ermitteln und in die jeweilige Package Section räumen:
+		if (SECTIONS.length >= 2) {
+			SECTION_SIZE = SECTIONS[0].distanceTo(SECTIONS[1]) * 0.5;
+			// abstand zweier benachbarter Sektionen
+		} else {
+			SECTION_SIZE = 200;
+		}
+		var size = SECTION_SIZE;
+		
+		for (var i = 0; i < cubes.length; i++) {
+			var object = new THREE.Object3D();
+			if (packageList) {
+				var index = get_index_packageList(cubes[i].userData.packageName);
+				object.position.x = Math.random() * size - size / 2 + SECTIONS[index].x;
+				object.position.y = Math.random() * size - size / 2 + SECTIONS[index].y;
+				object.position.z = Math.random() * size - size / 2 + SECTIONS[index].z;
+			} else {
+				object.position.x = Math.random() * size - size / 2 + SECTIONS[i % package_count].x;			
+				object.position.y = Math.random() * size - size / 2 + SECTIONS[i % package_count].y;
+				object.position.z = Math.random() * size - size / 2 + SECTIONS[i % package_count].z;
+			}
+
+			var scale3 = 0.02 * distance;
+			// gleiche größe für alle Klassen
+			object.scale.set(scale3, scale3, scale3);
+	
+			if (parseInt(type) == 1) {
+				targets.relationArc.push(object);
+			} else if (parseInt(type) == 2) {
+				targets.relationSphere.push(object);
+			}
+		}
+	}
+}
+
+/**
+ * Berechnet Sektionen auf einer Kreisbahn
+ * @param {Number} distance Radius der Kreisbahn
+ * @param {Number} count Anzahl der Sektionen
+ * @return Array of THREE.Vector3
+ */
+function calculate_sections_arc(distance, count) {
+	var angle_d = (Math.PI * 2) / count;
+	// Winkelschritt in Bogenmaß
+	// Sektionsaufteilung anhand der Anzahl der Packages
+	var axis = new THREE.Vector3(0, 1, 0);
+	var sections = new Array();
+	var v = new THREE.Vector3(distance, 0, 0);
+	var angle = 0;
+	for (var i = 0; i < count; i++) {
+		sections.push(rotate_vector(v, axis, angle));
+		angle += angle_d;
+	};
+	return sections;
+}
+
+/**
+ * Dreht einen Vektor (v) um die Axe (axis) im Winkel (angle) der im Bogenmaß angegeben ist
+ * @param {THREE.Vector3} v
+ * @param {THREE.Vector3} axis
+ * @param {Number} angle
+ */
+function rotate_vector(v, axis, angle) {
+	if (v) {
+		var v_return = v.clone();
+		var matrix = new THREE.Matrix4().makeRotationAxis(axis, angle);
+
+		v_return.applyMatrix4(matrix);
+		return v_return;
+	} else {
+		return new THREE.Vector3(0, 0, 0);
+	}
+}
+
+/**
+ * Berechnet Sektionen in Kugelform (auf der Aussenhülle)
+ * @param {Number} distance
+ * @param {Number} count
+ * @return Array of THREE.Vector3
+ */
+function calculate_sections_sphere(distance, count) {
+	var sections = new Array();
+	var vector = new THREE.Vector3();
+	var l = count;
+	var radius = distance;
+	for (var i = 0; i < l; i++) {
+
+		var phi = Math.acos(-1 + (2 * i ) / l);
+		var theta = Math.sqrt(l * Math.PI) * phi;
+
+		var x = radius * Math.cos(theta) * Math.sin(phi);
+		var y = radius * Math.sin(theta) * Math.sin(phi);
+		var z = radius * Math.cos(phi);
+		sections.push(new THREE.Vector3(x, y, z));
+	}
+	return sections;
+}
+
+/**
+ * Berechnet gebogene Beziehungslinien
+ * @param {Object} base Basispunkt
+ * @param {Object} cubes Liste aller Beziehungsknoten
+ * @param {Object} color Farbe
+ */
+function calculate_curved_lines(base, cubes, color) {
+	var lines = new Array();
+//	var relations = generate_random_relation_array();
+	if(base.userData.relatedTo){
+		for (var i = 0; i < base.userData.relatedTo.length; i++) {
+			var cube1, cube2;
+			cube1 = base;
+			var index = nameList.indexOf(cube1.userData.relatedTo[i]);
+			if((index != -1)&&(index < cubes.length)){
+				cube2 = cubes[index];	
+				var radius = cube1.position.length();
+				// Length of Vector in Spere equals radius
+				var pos = cube1.position.clone();
+				var dist = pos.sub(cube2.position);
+				if (dist.length() > radius) {
+					var spline = new THREE.SplineCurve3([cube1.position,
+					//new THREE.Vector3(0, 0, 0),
+					spline_vector_line(cube1.position, cube2.position), cube2.position]);
+		
+				} else {
+					var spline = new THREE.SplineCurve3([cube1.position, spline_vector_line(cube1.position, cube2.position), cube2.position]);
+				}
+				lines.push(line_mesh(spline, color));
+			}
+		};
+	}
+	return lines;
+}
+
+/**
+ * Berechnet gebogene Beziehungslinien
+ * @param {Object} base Basispunkt
+ * @param {Object} cubes Liste aller Beziehungsknoten
+ * @param {Object} color Farbe
+ */
+function calculate_bundle_lines(base, cubes, color) {
+	var lines = new Array();
+//	var relations = generate_random_relation_array();
+	if(base.userData.relatedTo){
+		for (var i = 0; i < base.userData.relatedTo.length; i++) {
+			var cube1, cube2;
+			cube1 = base;
+			var index = nameList.indexOf(cube1.userData.relatedTo[i]);
+			if((index != -1)&&(index < cubes.length)){
+				cube2 = cubes[index];	
+				var radius = cube1.position.length();
+				// Length of Vector in Spere equals radius
+				var pos = cube1.position.clone();
+				var dist = pos.sub(cube2.position);
+				if (dist.length() > radius) {
+					var spline = new THREE.SplineCurve3([cube1.position,
+					//new THREE.Vector3(0, 0, 0),
+					spline_bundle_line(cube1.position, cube2.position), cube2.position]);
+		
+				} else {
+					var spline = new THREE.SplineCurve3([cube1.position, spline_vector_line(cube1.position, cube2.position), cube2.position]);
+				}
+				lines.push(line_mesh(spline, color));
+			}
+		};
+	}
+	return lines;
+}
+
+/**
+ * Berechnet gerade Beziehungslinien
+ * @param {Object} base Basispunkt
+ * @param {Object} cubes Liste aller Beziehungsknoten
+ * @param {Object} color Farbe
+ */
+function calculate_lines(base, cubes, color) {
+	var lines = new Array();
+	//var relations = generate_random_relation_array();
+	if(base.userData.relatedTo){
+		for (var i = 0; i < base.userData.relatedTo.length; i++) {
+			var cube1, cube2;
+			cube1 = base;
+			var index = nameList.indexOf(cube1.userData.relatedTo[i]);
+			if((index != -1)&&(index < cubes.length)){
+				cube2 = cubes[index];
+				if (cube1.userData.relatedTo[i] !== cube2.fullName)/* Klasse darf nicht auf sich selbst referenzieren */{
+					var spline = new THREE.SplineCurve3([cube1.position, cube2.position]);
+					lines.push(line_mesh(spline, color));
+				}else{
+					log('Klasse ' + cube1.userData.relatedTo[i] + ' referenziert auf sich selbst!');
+				}
+			}
+		};
+	}
+	return lines;
+}
+
+/**
+ *
+ * @param {Object} position1
+ * @param {Object} position2
+ */
+function spline_vector_line(position1, position2) {
+	var radius = position1.length();
+	var pos1 = position1.clone();
+	var pos2 = position2.clone();
+
+	var dist = pos1.sub(pos2);
+	var len = dist.length() / 2;
+	dist.setLength(len);
+
+	var pos2 = position2.clone();
+	var middle = pos2.add(dist);
+	var inv_middle = middle.clone().negate();
+	inv_middle.setLength(len / 2);
+	return middle.add(inv_middle);
+}
+
+/**
+ *
+ * @param {Object} position1
+ * @param {Object} position2
+ */
+function spline_bundle_line(position1, position2) {
+	var DELTA = 100;
+	
+	var radius = position1.length();
+	var pos1 = position1.clone();
+	var pos2 = position2.clone();
+
+	var dist = pos1.sub(pos2);
+	var len = dist.length() / 2;
+	dist.setLength(len);
+
+	var pos2 = position2.clone();
+	var middle = pos2.add(dist);
+	
+	if (middle.length()<DELTA){
+		return new THREE.Vector3(0,0,0);
+	}else{
+		var inv_middle = middle.clone().negate();
+		inv_middle.setLength(len / 2);
+		return middle.add(inv_middle);
+		//return middle;
+	}
+}
+
+function generate_random_relation_array() {
+	var length = Math.random() * 20 + 3;
+	var relations = new Array();
+	for (var i = 0; i < length; i++) {
+		relations.push(parseInt(Math.random() * cubes.length));
+	};
+	return relations;
+}
+
+
+
+
+

@@ -1,0 +1,52 @@
+body {
+	margin: 0;
+	overflow: hidden;
+}
+
+#viewer {
+	position: absolute; 
+	width: 80%;
+	height: 80%;
+	border: 1px solid orange;
+}
+
+#debug {
+	position: absolute;
+	bottom: 0px;
+	width: 81%;
+	height: 20%;
+	overflow:auto;
+}
+
+#sidebar {
+	position: absolute;
+	left: 81%;
+	width: 19%;
+	height: 80%;
+	background-color: #eee;
+	overflow: auto;
+}
+
+#sidebar_btn {
+	position: absolute;
+	top: 80%;
+	left:81%;
+	bottom: 0px;
+	height: 19%;
+	width: 19%;
+	background-color: #eee;
+	overflow: auto;
+}
+
+#ta_input {
+	position: absolute;
+	height: 50%;
+	width: 95%;
+}
+
+#diagramm_radio {
+	position: absolute;
+	height: 45%;
+	width: 95%;
+	top: 55%;
+}
