@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <title>Software Architecture 3D</title>    
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="./css/my/treemap/viewer.css" />
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="./lib/js/d3.min.js" charset="utf-8"></script>
+		<script src="./lib/js/tween.min.js"></script>
+		<script src="./lib/js/stats.min.js"></script>
+		<script src="./lib/js/three.js"></script>
+		<script src="./lib/js/tinycolor.js"></script> 
+		<script src="./js/threejs/controls/TrackballControls.js"></script>
+		<script src="./js/threejs/renderers/CSS3DRenderer.js"></script>			
+	</head>
+	<body>
+		<div id="viewer"></div>
+		<div id="sidebar">
+			<textarea id="ta_input"></textarea> 
+			<div id="diagramm_radio"> 
+				<input type="radio" name="Diagramm" value="1" id="intro" checked="checked" onchange="tweenToStatus(1)"> Intro<br> 
+				<input type="radio" name="Diagramm" value="2" id="treemap_package" onchange="tweenToStatus(2)"> Treemap - Packages<br> 
+<!--				<input type="radio" name="Diagramm" value="3" id="treemap_classes" onchange="tweenToStatus(3)"> Treemap - Classes<br>   --> 
+				<input type="radio" name="Diagramm" value="4" id="relation_sphere" onchange="tweenToStatus(4)"> Relation - Sphere<br> 
+<!--				<input type="radio" name="Diagramm" value="5" id="relation_helix" onchange="tweenToStatus(5)"> Relation - Helix<br>		-->
+				<input type="radio" name="Diagramm" value="6" id="relation_package_arc" onchange="tweenToStatus(6)"> Relation - Package - Arc<br>
+				<input type="radio" name="Diagramm" value="7" id="relation_package_sphere" onchange="tweenToStatus(7)"> Relation - Package - Sphere
+			</div>
+		</div>
+		<div id="debug">
+			<p id="classname">Classname</p>
+		</div>
+		<div id="sidebar_btn">
+			<button type="button" 	name="update" 			id="btn_update">Update</button>								
+			<button type="button" 	name="clear" 		 	id="btn_clear">Clear</button>
+			<button type="button" 	name="reset_view"		id="btn_reset_view">Reset View</button><br>
+			<div id="diagram_relation">
+				<input type="radio" name="Relation" value="1" id="rb_single" 	checked="checked" onchange="setRelationMode(0)"> Singe-Relation<br> 
+				<input type="radio" name="Relation" value="2" id="rb_all" 		onchange="setRelationMode(1)">All-Relation<br>
+			</div> 
+			<div id="diagram_intro">
+				<input type="radio" name="Relation" value="1" id="rb_loc" 		checked="checked" onchange="setMetricsMode(0)">Lines of Code [LOC]<br> 
+				<input type="radio" name="Relation" value="2" id="rb_nom" 		onchange="setMetricsMode(1)">Number Of Methods [NOM]<br>
+				<input type="radio" name="Relation" value="3" id="rb_noa" 		onchange="setMetricsMode(2)">Number Of Attributes [NOA]<br>
+				<input type="radio" name="Relation" value="4" id="rb_noc" 		onchange="setMetricsMode(3)">Number Of Children [NOC]<br>
+				<input type="radio" name="Relation" value="5" id="rb_cbo" 		onchange="setMetricsMode(4)">Coupling Between Objects [CBO]<br>
+				<input type="radio" name="Relation" value="6" id="rb_dit" 		onchange="setMetricsMode(5)">Depth Of Inheritence Tree [DIT]<br>
+				<input type="radio" name="Relation" value="7" id="rb_rfc" 		onchange="setMetricsMode(6)">Response For Class [RFC]<br>
+			</div> 
+		</div>
+		<script src="./js/my/console/log.js" charset="utf-8"></script>
+		<script src="./js/my/diagram/calculate_diagramms.js" charset="utf-8"></script>
+		<script src="./js/my/diagram/elements.js" charset="utf-8"></script>
+		<script src="./js/my/diagram/animation.js" charset="utf-8"></script>
+		<script src="./js/my/diagram/package_list.js" charset="utf-8"></script>
+	</body>
+</html>

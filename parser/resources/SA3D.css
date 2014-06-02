@@ -1,0 +1,21 @@
+
+#background {
+   -fx-background-color: #4b4b4b;
+}
+
+.button {
+    -fx-background-color: #3a3a3a;
+    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    -fx-font-size: 18pt;
+    -fx-text-fill: white;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #3a3a3a;
+    -fx-border-insets: 0 0 1 2;
+}
+
+.label {
+    -fx-font-size: 11pt;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-text-fill: white;
+    -fx-opacity: 1;
+}

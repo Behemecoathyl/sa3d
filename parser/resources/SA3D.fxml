@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.*?>
+<?import javafx.scene.text.*?>
+
+
+<VBox fx:id="background" xmlns:fx="http://javafx.com/fxml" fx:controller="de.ruzman.app.Controller">
+  <stylesheets>
+    <URL value="file:resources/SA3D.css"/>
+  </stylesheets>
+   	 <children>
+        <Button fx:id="upload" prefHeight="450" prefWidth="800" wrapText="true">
+			<text>Quellcodeverzeichnis zum Einlesen ins Fenster ziehen.</text>
+	  	</Button>
+	  	<ProgressBar fx:id="progress" prefHeight="50.0" prefWidth="800" />
+    	</children>
+</VBox>
